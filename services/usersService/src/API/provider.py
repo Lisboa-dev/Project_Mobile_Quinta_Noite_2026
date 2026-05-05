@@ -34,34 +34,35 @@ def router_factory():
 '''
 
 #atual
-def useCaseCreateUser_factory():
-    repository = UserRepository()
-    usecase = createUseCase.CreateUserUseCase(repository)
-    return usecase
-  
+class UserFactory:
+    def useCaseCreateUser_factory():
+        repository = UserRepository()
+        usecase = createUseCase.CreateUserUseCase(repository)
+        return usecase
+    
 
-def useCaseDeleteUser_factory():
-    repository = UserRepository()
-    usecase = deleteUseCase.DeleteUserUseCase(repository)
-    return usecase
-
-
-def useCaseUpdateUser_factory():
-    repository = UserRepository()
-    usecase = updateUseCase.UpdateUserUseCase(repository)
-    return usecase
+    def useCaseDeleteUser_factory():
+        repository = UserRepository()
+        usecase = deleteUseCase.DeleteUserUseCase(repository)
+        return usecase
 
 
-def useCaseListUser_factory():
-    repository = UserRepository()
-    usecase = listUseCase.ListUserUseCase(repository)
-    return usecase
+    def useCaseUpdateUser_factory():
+        repository = UserRepository()
+        usecase = updateUseCase.UpdateUserUseCase(repository)
+        return usecase
 
 
-def useCaseDetailUser_factory():
-    repository = UserRepository()
-    usecase = detailUseCase.DetailUserUseCase(repository)
-    return usecase
+    def useCaseListUser_factory():
+        repository = UserRepository()
+        usecase = listUseCase.ListUserUseCase(repository)
+        return usecase
+
+
+    def useCaseDetailUser_factory():
+        repository = UserRepository()
+        usecase = detailUseCase.DetailUserUseCase(repository)
+        return usecase
 
 
 

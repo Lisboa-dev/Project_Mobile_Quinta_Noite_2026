@@ -1,0 +1,55 @@
+version: "3.9"
+
+services:
+  usersService:
+    build: ./usersService
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.usersService.rule=Host(manageUsers.example.com) && PathPrefix(/users)"
+      - "traefik.http.services.usersService.loadbalancer.server.port=3001"
+      - "traefik.docker.network=web"
+
+      # 🔐 ROUTER PADRÃO (COM AUTH)
+      - "traefik.http.routers.app-secure.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.app-secure.middlewares=auth"
+
+      # 🌐 ROUTER PÚBLICO (SEM AUTH)
+      - "traefik.http.routers.app-public.rule=Host(manageUsers.example.com) && Path(`/login`) || Path(`/create`)"
+      - "traefik.http.routers.app-public.entrypoints=web"
+
+      # 🔥 PRIORIDADE (ESSENCIAL)
+      - "traefik.http.routers.app-public.priority=100"
+
+
+
+    ports:
+      - "3000:3000"
+    networks:
+      - web
+      - userNet
+
+
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    networks:
+      - userNet
+
+
+
+  postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: usersdb
+    ports:
+      - "5432:5432"
+    networks:
+      - userNet
+
+
+networks:
+  userNet:
+    internal: true

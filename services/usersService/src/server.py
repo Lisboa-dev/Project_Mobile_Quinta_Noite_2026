@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
-from src.API.Controllers.UserController import routerUsers
-from src.Auth.router import routerAuth
+from services.usersService.src.API.Controllers.MedicController import routerUsers
+
 
 app = FastAPI()
 
@@ -22,7 +22,8 @@ async def add_process_time_header(request, call_next):
 
 
 app.include_router(routerUsers)
-app.include_router(routerAuth)
+
+
 
 def main():
     import uvicorn

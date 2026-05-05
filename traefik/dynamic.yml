@@ -1,0 +1,6 @@
+http:
+  middlewares:
+    auth:
+      forwardAuth:
+        address: http://auth:3000/Auth
+        trustForwardHeader: true
