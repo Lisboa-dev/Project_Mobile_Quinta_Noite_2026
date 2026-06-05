@@ -1,31 +1,33 @@
-from services.usersService.src.infra.adapters.EventBus import InMemoryEventBus
-from services.usersService.src.infra.adapters.RoleScopedUserRepository import RoleScopedUserRepository
-from services.usersService.src.modules.pacients.application.useCases.CreateUseCase import CreatePacientUseCase
-from services.usersService.src.modules.pacients.application.useCases.DeleteUseCase import DeletePacientUseCase
-from services.usersService.src.modules.pacients.application.useCases.DetailUseCase import DetailPacientUseCase
-from services.usersService.src.modules.pacients.application.useCases.ListUseCase import ListPacientUseCase
-from services.usersService.src.modules.pacients.application.useCases.UpdateUseCase import UpdatePacientUseCase
-from services.usersService.src.modules.users.application.useCases.commands.admin.CreateUseCase import CreateAdminUseCase
-from services.usersService.src.modules.users.application.useCases.commands.admin.DeleteUseCase import DeleteAdminUseCase
-from services.usersService.src.modules.users.application.useCases.commands.admin.UpdateUseCase import UpdateAdminUseCase
-from services.usersService.src.modules.users.application.useCases.commands.atendent.CreateUseCase import CreateAtendentUseCase
-from services.usersService.src.modules.users.application.useCases.commands.atendent.DeleteUseCase import DeleteAtendentUseCase
-from services.usersService.src.modules.users.application.useCases.commands.atendent.UpdateUseCase import UpdateAtendentUseCase
-from services.usersService.src.modules.users.application.useCases.commands.medic.CreateUseCase import CreateMedicUseCase
-from services.usersService.src.modules.users.application.useCases.commands.medic.DeleteUseCase import DeleteMedicUseCase
-from services.usersService.src.modules.users.application.useCases.commands.medic.UpdateUseCase import UpdateMedicUseCase
-from services.usersService.src.modules.users.application.useCases.querys.admin.DetailUseCase import DetailAdminUseCase
-from services.usersService.src.modules.users.application.useCases.querys.admin.ListUseCase import ListAdminUseCase
-from services.usersService.src.modules.users.application.useCases.querys.atendent.DetailUseCase import DetailAtendentUseCase
-from services.usersService.src.modules.users.application.useCases.querys.atendent.ListUseCase import ListAtendentUseCase
-from services.usersService.src.modules.users.application.useCases.querys.medic.DetailUseCase import DetailMedicUseCase
-from services.usersService.src.modules.users.application.useCases.querys.medic.ListUseCase import ListMedicUseCase
+from src.infra.adapters.EventBus import InMemoryEventBus
+from src.infra.adapters.RoleScopedUserRepository import RoleScopedUserRepository
+from src.modules.pacients.application.useCases.CreateUseCase import CreatePacientUseCase
+from src.modules.pacients.application.useCases.DeleteUseCase import DeletePacientUseCase
+from src.modules.pacients.application.useCases.DetailUseCase import DetailPacientUseCase
+from src.modules.pacients.application.useCases.ListUseCase import ListPacientUseCase
+from src.modules.pacients.application.useCases.UpdateUseCase import UpdatePacientUseCase
+from src.modules.users.application.useCases.commands.admin.CreateUseCase import CreateAdminUseCase
+from src.modules.users.application.useCases.commands.admin.DeleteUseCase import DeleteAdminUseCase
+from src.modules.users.application.useCases.commands.admin.UpdateUseCase import UpdateAdminUseCase
+from src.modules.users.application.useCases.commands.atendent.CreateUseCase import CreateAtendentUseCase
+from src.modules.users.application.useCases.commands.atendent.DeleteUseCase import DeleteAtendentUseCase
+from src.modules.users.application.useCases.commands.atendent.UpdateUseCase import UpdateAtendentUseCase
+from src.modules.users.application.useCases.commands.medic.CreateUseCase import CreateMedicUseCase
+from src.modules.users.application.useCases.commands.medic.DeleteUseCase import DeleteMedicUseCase
+from src.modules.users.application.useCases.commands.medic.UpdateUseCase import UpdateMedicUseCase
+from src.modules.users.application.useCases.querys.admin.DetailUseCase import DetailAdminUseCase
+from src.modules.users.application.useCases.querys.admin.ListUseCase import ListAdminUseCase
+from src.modules.users.application.useCases.querys.atendent.DetailUseCase import DetailAtendentUseCase
+from src.modules.users.application.useCases.querys.atendent.ListUseCase import ListAtendentUseCase
+from src.modules.users.application.useCases.querys.medic.DetailUseCase import DetailMedicUseCase
+from src.modules.users.application.useCases.querys.medic.ListUseCase import ListMedicUseCase
 
 
 class UserFactory:
+    _event_bus = InMemoryEventBus()
+
     @staticmethod
     def event_bus_factory():
-        return InMemoryEventBus()
+        return UserFactory._event_bus
 
     @staticmethod
     def medic_repository_factory():

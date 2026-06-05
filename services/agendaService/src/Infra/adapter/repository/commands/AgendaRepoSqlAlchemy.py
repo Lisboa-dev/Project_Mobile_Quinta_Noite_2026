@@ -9,6 +9,7 @@ class AgendaRepository(SQLiteRepository):
                 """
                 INSERT INTO agenda_records (paciente, profissional, data_hora, horario)
                 VALUES (?, ?, ?, ?)
+                RETURNING id
                 """,
                 (
                     data["paciente"],
@@ -17,7 +18,7 @@ class AgendaRepository(SQLiteRepository):
                     data["horario"],
                 ),
             )
-            return {"id": cursor.lastrowid, **data}
+            return {"id": cursor.fetchone()["id"], **data}
 
     def list_all(self):
         with self._db.connect() as connection:

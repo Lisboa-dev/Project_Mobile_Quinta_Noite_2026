@@ -12,7 +12,7 @@ class CalendarRepository(SQLiteRepository):
             connection.execute(
                 """
                 INSERT INTO days (id, year, month, day, weekday, data, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                VALUES (?, ?, ?, ?, ?, ?::jsonb, CURRENT_TIMESTAMP)
                 ON CONFLICT(id) DO UPDATE SET
                     year = excluded.year,
                     month = excluded.month,

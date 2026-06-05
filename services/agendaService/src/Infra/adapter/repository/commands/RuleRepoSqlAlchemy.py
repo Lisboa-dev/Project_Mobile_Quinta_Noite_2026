@@ -9,7 +9,7 @@ class RuleRepository(SQLiteRepository):
             connection.execute(
                 """
                 INSERT INTO rules (id, target, target_type, rule_effect, data, updated_at)
-                VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                VALUES (?, ?, ?, ?, ?::jsonb, CURRENT_TIMESTAMP)
                 ON CONFLICT(id) DO UPDATE SET
                     target = excluded.target,
                     target_type = excluded.target_type,

@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, Response, status
 
-from services.usersService.src.api.ApiSchemas import ErrorResponse, UserCreateRequest, UserResponse, UserUpdateRequest
-from services.usersService.src.api.ControllerUtils import dto_to_response, handle_domain_exception
-from services.usersService.src.api.Provider import UserFactory
+from src.api.ApiSchemas import ErrorResponse, UserCreateRequest, UserResponse, UserUpdateRequest
+from src.api.ControllerUtils import dto_to_response, handle_domain_exception
+from src.api.Provider import UserFactory
 
 
 routerPacients = APIRouter(prefix="/pacients", tags=["pacients"])

@@ -36,8 +36,12 @@ services:
     ports:
       - "${AGENDA_PORT:-8001}:8000"
     depends_on:
-      - agenda-postgres
-      - agenda-redis
+      agenda-postgres:
+        condition: service_healthy
+      agenda-redis:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
     networks:
       - web
       - agenda-net

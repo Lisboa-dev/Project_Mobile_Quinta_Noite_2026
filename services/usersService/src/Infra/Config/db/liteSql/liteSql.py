@@ -1,15 +1,18 @@
+import os
 from contextlib import contextmanager
-from pathlib import Path
 from typing import Generator
 
+from sqlalchemy import text
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, declarative_base, sessionmaker
 
 
-BASE_DIR = Path(__file__).resolve().parent
-DATABASE_URL = f"sqlite:///{BASE_DIR}/lite.db"
+DATABASE_URL = os.getenv(
+    "USERS_DATABASE_URL",
+    "postgresql+psycopg2://postgres:password@users-postgres:5432/usersdb",
+).replace("+asyncpg", "+psycopg2")
 
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
@@ -32,3 +35,18 @@ get_command = get_query
 
 def init_db() -> None:
     Base.metadata.create_all(bind=engine)
+    with engine.begin() as connection:
+        connection.execute(
+            text(
+                """
+                CREATE TABLE IF NOT EXISTS event_logs (
+                    id BIGSERIAL PRIMARY KEY,
+                    service_name TEXT NOT NULL,
+                    event_name TEXT NOT NULL,
+                    routing_key TEXT NOT NULL,
+                    payload JSONB NOT NULL,
+                    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+                )
+                """
+            )
+        )

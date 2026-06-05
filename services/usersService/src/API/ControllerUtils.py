@@ -1,10 +1,10 @@
 from fastapi import HTTPException, status
 
-from services.usersService.src.modules.pacients.domain.exceptions.DomainExceptions import (
+from src.modules.pacients.domain.exceptions.DomainExceptions import (
     PacientAlreadyExistsException,
     PacientNotFoundException,
 )
-from services.usersService.src.modules.users.domain.exceptions.DomainExceptions import (
+from src.modules.users.domain.exceptions.DomainExceptions import (
     DomainException,
     UserAlreadyExistsException,
     UserNotFoundException,

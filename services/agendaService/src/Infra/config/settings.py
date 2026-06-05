@@ -16,8 +16,8 @@ def _load_dotenv_file(path: Path) -> None:
 
 def load_env() -> None:
     service_root = Path(__file__).resolve().parents[3]
-    project_root = service_root.parents[1]
-    _load_dotenv_file(project_root / ".env")
+    if len(service_root.parents) > 1:
+        _load_dotenv_file(service_root.parents[1] / ".env")
     _load_dotenv_file(service_root / ".env")
 
 

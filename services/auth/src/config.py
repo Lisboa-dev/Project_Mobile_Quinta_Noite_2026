@@ -32,6 +32,10 @@ class Settings:
     APP_NAME: str = os.getenv("AUTH_APP_NAME", "auth-service")
     PORT: int = _get_int("AUTH_PORT", _get_int("PORT", 8000))
     ENV: str = os.getenv("ENV", "development")
+    AUTH_DATABASE_URL: str = os.getenv(
+        "AUTH_DATABASE_URL",
+        "postgresql://postgres:password@auth-postgres:5432/authdb",
+    )
 
     JWT_SECRET: str = os.getenv("JWT_SECRET", "change-me-in-env")
     JWT_ALGORITHM: str = os.getenv("JWT_ALGORITHM", "HS256")
@@ -50,7 +54,7 @@ class Settings:
     AUTH_DEV_USER_ID: str = os.getenv("AUTH_DEV_USER_ID", "1")
     AUTH_DEV_USER_EMAIL: str = os.getenv("AUTH_DEV_USER_EMAIL", "admin@example.com")
     AUTH_DEV_USER_NAME: str = os.getenv("AUTH_DEV_USER_NAME", "admin")
-    AUTH_DEV_USER_PASSWORD: str = os.getenv("AUTH_DEV_USER_PASSWORD", "admin123")
+    AUTH_DEV_USER_PASSWORD: str = os.getenv("AUTH_DEV_USER_PASSWORD", "Admin123!")
     AUTH_DEV_USER_ROLE: str = os.getenv("AUTH_DEV_USER_ROLE", "admin")
 
 

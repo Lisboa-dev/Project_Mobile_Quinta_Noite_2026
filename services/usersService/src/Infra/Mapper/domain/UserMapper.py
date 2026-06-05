@@ -1,5 +1,5 @@
-from services.usersService.src.infra.models.sqlAlchemy.UserSqlSchamy import Usuario
-from services.usersService.src.modules.users.domain.entities.UserEntity import User
+from src.infra.models.sqlAlchemy.UserSqlSchamy import Usuario
+from src.modules.users.domain.entities.UserEntity import User
 
 
 class UserMapper:

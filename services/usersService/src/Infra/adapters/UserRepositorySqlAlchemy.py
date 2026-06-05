@@ -1,8 +1,8 @@
-from services.usersService.src.infra.config.db.liteSql.LiteSql import get_query
-from services.usersService.src.infra.mapper.domain.UserMapper import UserMapper
-from services.usersService.src.infra.models.sqlAlchemy.UserSqlSchamy import CargoEnum, Usuario
-from services.usersService.src.modules.users.domain.entities.UserEntity import User
-from services.usersService.src.modules.users.domain.valueObjects.PasswordVO import Password
+from src.infra.config.db.liteSql.LiteSql import get_query
+from src.infra.mapper.domain.UserMapper import UserMapper
+from src.infra.models.sqlAlchemy.UserSqlSchamy import CargoEnum, Usuario
+from src.modules.users.domain.entities.UserEntity import User
+from src.modules.users.domain.valueObjects.PasswordVO import Password
 
 
 class UserRepository:

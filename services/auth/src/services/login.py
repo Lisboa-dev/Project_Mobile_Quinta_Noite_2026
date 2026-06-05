@@ -1,6 +1,8 @@
 import httpx
+import hashlib
 
 from ..config import get_settings
+from .event_log import log_event
 from .tokenJwt import TokenService
 
 
@@ -69,11 +71,14 @@ async def loginService(body: dict) -> dict | None:
         user = _dev_user(email=email, name=name)
 
     if not user or not validate_password(password, str(user.get("password", ""))):
+        log_event("LoginFailed", "auth.login.failed", {"email": email, "name": name})
         return None
 
     user_id = str(user.get("id"))
     role = str(user.get("role") or user.get("cargo") or "user")
-    return {"user_id": user_id, "tokens": TokenService.generate_token(user_id, role)}
+    result = {"user_id": user_id, "tokens": TokenService.generate_token(user_id, role)}
+    log_event("LoginSucceeded", "auth.login.succeeded", {"user_id": user_id, "role": role})
+    return result
 
 
 async def validateLoginService(token: str) -> bool:
@@ -81,4 +86,6 @@ async def validateLoginService(token: str) -> bool:
 
 
 def validate_password(password: str, stored_password: str) -> bool:
-    return password == stored_password
+    if password == stored_password:
+        return True
+    return hashlib.sha256(password.encode("utf-8")).hexdigest() == stored_password

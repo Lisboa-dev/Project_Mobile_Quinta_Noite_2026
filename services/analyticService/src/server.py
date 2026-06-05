@@ -1,14 +1,26 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, Response
 from prometheus_client import CONTENT_TYPE_LATEST, Counter, Gauge, generate_latest
 
+from src.infra.database import init_db
+from src.infra.messaging import start_consumer_task
 from src.modules.doctorDashboard.api.router import router as doctor_dashboard_router
 from src.modules.operationsCenter.api.router import router as operations_center_router
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init_db()
+    start_consumer_task()
+    yield
 
 
 app = FastAPI(
     title="Analytic Service",
     version="1.0.0",
     description="Dashboards analiticos por contexto de feature.",
+    lifespan=lifespan,
 )
 
 dashboard_requests = Counter(

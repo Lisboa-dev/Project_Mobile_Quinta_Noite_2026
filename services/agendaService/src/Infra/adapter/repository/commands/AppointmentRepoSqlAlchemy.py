@@ -13,7 +13,7 @@ class AppointmentRepository(SQLiteRepository, AppointmentRepositoryPort):
                 INSERT INTO appointments (
                     id, scheduler_id, patient_id, doctor_id, room_id, date_id, status, data, updated_at
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?::jsonb, CURRENT_TIMESTAMP)
                 ON CONFLICT(id) DO UPDATE SET
                     scheduler_id = excluded.scheduler_id,
                     patient_id = excluded.patient_id,

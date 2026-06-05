@@ -10,6 +10,10 @@ services:
     environment:
       ANALYTIC_PORT: ${ANALYTIC_PORT:-8000}
       PROMETHEUS_URL: ${PROMETHEUS_URL:-http://prometheus:9090}
+      ANALYTIC_DATABASE_URL: ${ANALYTIC_DATABASE_URL:-postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-password}@analytic-postgres:5432/${ANALYTIC_POSTGRES_DB:-analyticdb}}
+      RABBITMQ_URL: ${RABBITMQ_URL:-amqp://guest:guest@rabbitmq:5672/}
+      USER_EVENTS_EXCHANGE: ${USER_EVENTS_EXCHANGE:-users.events}
+      RABBITMQ_EXCHANGE: ${RABBITMQ_EXCHANGE:-agenda.events}
       ENV: ${ENV:-development}
     labels:
       - "traefik.enable=true"
@@ -20,6 +24,27 @@ services:
       - "traefik.docker.network=web"
     ports:
       - "${ANALYTIC_PORT:-8005}:8000"
+    depends_on:
+      analytic-postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+    networks:
+      - web
+
+  analytic-postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${ANALYTIC_POSTGRES_DB:-analyticdb}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-postgres}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - analytic-postgres-data:/var/lib/postgresql/data
     networks:
       - web
 
@@ -72,5 +97,6 @@ networks:
     name: web
 
 volumes:
+  analytic-postgres-data:
   prometheus-data:
   grafana-data:

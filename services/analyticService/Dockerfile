@@ -2,11 +2,15 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
+ENV POETRY_REQUESTS_TIMEOUT=120 \
+    POETRY_INSTALLER_MAX_WORKERS=1
+
 RUN pip install --upgrade pip && pip install poetry
 
 COPY pyproject.toml poetry.lock* ./
 
 RUN poetry config virtualenvs.create false \
+    && poetry config installer.max-workers 1 \
     && poetry install --no-interaction --no-ansi --no-root
 
 COPY . .

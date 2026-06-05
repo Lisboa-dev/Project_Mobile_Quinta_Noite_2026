@@ -27,6 +27,8 @@ class SQLiteRepository:
     def _load(self, value: str | None) -> dict:
         if not value:
             return {}
+        if isinstance(value, dict):
+            return value
         return json.loads(value)
 
     def _entity_id(self, entity) -> str:
@@ -73,3 +75,13 @@ class SQLiteRepository:
                 (entity_id,),
             )
             return cursor.rowcount > 0
+
+    def log_event(self, event_name: str, routing_key: str, payload: dict) -> None:
+        with self._db.connect() as connection:
+            connection.execute(
+                """
+                INSERT INTO event_logs (service_name, event_name, routing_key, payload)
+                VALUES (?, ?, ?, ?::jsonb)
+                """,
+                ("agenda-service", event_name, routing_key, self._dump(payload)),
+            )

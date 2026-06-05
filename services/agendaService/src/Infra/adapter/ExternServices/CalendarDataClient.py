@@ -1,5 +1,4 @@
-from calendar import monthrange
-from datetime import date
+from datetime import date, timedelta
 
 from src.modules.agenda.domain.valueObjects import Date, DayStatus
 
@@ -9,17 +8,21 @@ class CalendarDataClient:
         return []
 
     async def mont(self, mes: int | str, ano: int | str) -> list[dict]:
-        month = int(mes)
         year = int(ano)
-        total_days = monthrange(year, month)[1]
-        return [
+        current = date(year, 1, 1)
+        days = []
+        for _ in range(365):
+            month = current.month
+            day = current.day
+            days.append(
             {
                 "rooms": [],
                 "date": Date(day=day, month=month, year=year),
-                "weekday": date(year, month, day).weekday(),
+                    "weekday": current.weekday(),
                 "availability": True,
                 "status": DayStatus.AVAILABLE,
                 "rules": [],
             }
-            for day in range(1, total_days + 1)
-        ]
+            )
+            current += timedelta(days=1)
+        return days

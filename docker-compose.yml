@@ -73,7 +73,7 @@ services:
       - openfga-net
 
   openfga-migrate:
-    image: openfga/openfga:1
+    image: openfga/openfga:v1.15.1
     command: migrate
     depends_on:
       openfga-postgres:
@@ -85,7 +85,7 @@ services:
       - openfga-net
 
   openfga:
-    image: openfga/openfga:1
+    image: openfga/openfga:v1.15.1
     command: run
     depends_on:
       openfga-migrate:

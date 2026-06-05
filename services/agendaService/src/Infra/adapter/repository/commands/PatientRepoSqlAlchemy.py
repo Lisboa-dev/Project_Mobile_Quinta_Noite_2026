@@ -9,7 +9,7 @@ class PatientRepository(SQLiteRepository):
             connection.execute(
                 """
                 INSERT INTO patients (id, name, data, updated_at)
-                VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+                VALUES (?, ?, ?::jsonb, CURRENT_TIMESTAMP)
                 ON CONFLICT(id) DO UPDATE SET
                     name = excluded.name,
                     data = excluded.data,

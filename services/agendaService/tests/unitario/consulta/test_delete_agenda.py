@@ -1,52 +1,18 @@
-import pytest
-from services.agendaService.src.modules.Agenda.Domain.Entities.agendaEntity import AgendaCreate
+from .test_list_agenda import AgendaCreate, FakeAgendaRepository
 
-class FakeAgendaRepository:
-    def __init__(self):
-        self.data = []
-        self.current_id = 1
 
-    def create(self, agenda):
-        agenda_dict = agenda.dict()
-        agenda_entity = agenda_dict.copy()
-        agenda_entity["id"] = self.current_id
-        self.current_id += 1
-        self.data.append(agenda_entity)
-        return agenda_entity
-
-    def list_all(self):
-        return self.data
-
-    def get_by_id(self, agenda_id):
-        for agenda in self.data:
-            if agenda["id"] == agenda_id:
-                return agenda
-        return None
-
-    def update(self, agenda_id, agenda):
-        for i, item in enumerate(self.data):
-            if item["id"] == agenda_id:
-                updated = {**item, **agenda.dict(exclude_unset=True)}
-                self.data[i] = updated
-                return updated
-        return None
-
+class DeletableAgendaRepository(FakeAgendaRepository):
     def delete(self, agenda_id):
-        for i, item in enumerate(self.data):
+        for index, item in enumerate(self.data):
             if item["id"] == agenda_id:
-                del self.data[i]
+                del self.data[index]
                 return True
         return False
-    
-def test_delete_agenda():
-    repository = FakeAgendaRepository()
 
-    # Criando uma agenda
-    created = repository.create(AgendaCreate(paciente="João Silva", profissional="Dra. Maria Souza", data_hora="2024-07-01T", horario="10:00:00"))
 
-    # Deletando a agenda
-    result = repository.delete(created["id"])
+def test_delete():
+    repository = DeletableAgendaRepository()
+    created = repository.create(AgendaCreate("Joao Silva", "Dra. Maria Souza", "2026-07-01", "10:00"))
 
-    # Verificando o resultado
-    assert result is True
-    assert repository.get_by_id(created["id"]) is None
+    assert repository.delete(created["id"]) is True
+    assert repository.list_all() == []

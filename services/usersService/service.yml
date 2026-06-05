@@ -8,7 +8,9 @@ services:
       - path: ./.env
         required: false
     environment:
-      USERS_DATABASE_URL: ${USERS_DATABASE_URL:-postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-password}@users-postgres:5432/${USERS_POSTGRES_DB:-usersdb}}
+      USERS_DATABASE_URL: ${USERS_DATABASE_URL:-postgresql+psycopg2://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-password}@users-postgres:5432/${USERS_POSTGRES_DB:-usersdb}}
+      RABBITMQ_URL: ${RABBITMQ_URL:-amqp://guest:guest@rabbitmq:5672/}
+      USER_EVENTS_EXCHANGE: ${USER_EVENTS_EXCHANGE:-users.events}
       REDIS_URL: ${REDIS_URL:-redis://users-redis:6379/0}
     labels:
       - "traefik.enable=true"
@@ -21,8 +23,12 @@ services:
     ports:
       - "${USERS_PORT:-8002}:8000"
     depends_on:
-      - users-postgres
-      - users-redis
+      users-postgres:
+        condition: service_healthy
+      users-redis:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
     networks:
       - web
       - users-net
@@ -47,6 +53,7 @@ services:
       - users-postgres-data:/var/lib/postgresql/data
     networks:
       - users-net
+      - web
 
 networks:
   web:

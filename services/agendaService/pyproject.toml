@@ -39,11 +39,11 @@ build-backend = "poetry.core.masonry.api"
 
 
 [tool.poetry.scripts]
-start = "src.API.server:main"
+start = "src.server:main"
 
 
 [tool.taskipy.tasks]
-start2 = "uvicorn src.API.server:app --reload"
+start2 = "uvicorn src.server:app --reload"
 check = "mypy ."
 test = "pytest"
 

@@ -1,65 +1,53 @@
 import pytest
-from services.agendaService.src.modules.Agenda.Domain.Entities.agendaEntity import AgendaCreate
-from src.modules.Agenda.Aplication.UseCases.createUseCase import CreateAgendaUseCase
 
-class FakeAgendaRepository:
+from src.modules.agenda.aplication.useCases.commands.calendar.CreateCalendar import (
+    CreateCalendarCommand,
+    CreateCalendarUseCase,
+)
+
+
+class FakeCalendarRepository:
     def __init__(self):
-        self.data = []
-        self.current_id = 1
+        self.days = []
+        self.deleted_years = []
 
-    def create(self, agenda):
-        agenda_dict = agenda.dict()
-        agenda_entity = agenda_dict.copy()
-        agenda_entity['id'] = self.current_id
-        self.current_id += 1
-        self.data.append(agenda_entity)
-        return agenda_entity
-    
-    def list_all(self):
-        return self.data
-    
-    def get_by_id(self, agenda_id):
-        for agenda in self.data:
-            if agenda['id'] == agenda_id:
-                return agenda
-        return None
-    
-    def update(self, agenda_id, agenda):
-        for i, item in enumerate(self.data):
-            if item['id'] == agenda_id:
-                update = {**item, **agenda.dict(exclude_unset=True)}
-                self.data[i] = update
-                return update
-            return None
-        
-    def delete(self, agenda_id):
-        for i, item in enumerate(self.data):
-            if item['id'] == agenda_id:
-                del self.data[i]
-                return True
-        return False
+    async def save(self, day):
+        self.days.append(day)
 
-    def save(self, agenda):
-        self.data.append(agenda)
+    async def delete(self, ano=None):
+        self.deleted_years.append(ano)
+        self.days.clear()
 
-def test_create_agenda():
-    repository = FakeAgendaRepository()
-    use_case = CreateAgendaUseCase(repository)
 
-    # Simulando dados de entrada
-    agenda = AgendaCreate(
-        paciente="João Silva",
-        profissional="Dra. Maria Souza",
-        data_hora="2024-07-01",
-        horario="10:00:00"
-        )
+class FakeRuleRepository:
+    async def getDayRules(self):
+        return []
 
-    # Executando o caso de uso
-    result = repository.create(agenda)
 
-    # Verificando o resultado
-    assert result['id'] == 1
-    assert result['paciente'] == "João Silva"
-    assert result['profissional'] == "Dra. Maria Souza"
-    assert result['data_hora'] == "2024-07-01"
-    assert result['horario'] == "10:00:00"
+class FakeCalendarData:
+    async def mont(self, _month, year):
+        from src.infra.adapter.ExternServices.CalendarDataClient import CalendarDataClient
+
+        return await CalendarDataClient().mont(1, year)
+
+
+class FakeBus:
+    def __init__(self):
+        self.events = []
+
+    def emit(self, event):
+        self.events.append(event)
+
+
+@pytest.mark.asyncio
+async def test_create_calendar_persists_and_returns_365_days():
+    repository = FakeCalendarRepository()
+    bus = FakeBus()
+    use_case = CreateCalendarUseCase(repository, FakeRuleRepository(), FakeCalendarData(), bus)
+
+    result = await use_case.execute(CreateCalendarCommand(day=1, ano=2026))
+
+    assert len(result) == 365
+    assert len(repository.days) == 365
+    assert len(bus.events) == 1
+    assert bus.events[0].year == "2026"

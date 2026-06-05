@@ -1,5 +1,6 @@
 import sys
 import json
+from contextlib import asynccontextmanager
 
 import uvicorn
 from starlette.applications import Starlette
@@ -9,6 +10,7 @@ from starlette.routing import Route
 
 from .config import get_settings
 from .services.authorization import authorization_service
+from .services.event_log import init_db
 from .services.login import validateLoginService
 from .services.login import loginService
 from .services.tokenJwt import TokenService
@@ -78,12 +80,19 @@ async def health(_request: Request):
     return json_response({"status": "ok", "service": get_settings().APP_NAME})
 
 
+@asynccontextmanager
+async def lifespan(_app):
+    init_db()
+    yield
+
+
 app = Starlette(
     routes=[
         Route("/health", endpoint=health, methods=["GET"]),
         Route("/auth/validate", endpoint=forward_auth, methods=["GET"]),
         Route("/auth/login", endpoint=login, methods=["POST"]),
-    ]
+    ],
+    lifespan=lifespan,
 )
 
 

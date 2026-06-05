@@ -1,4 +1,4 @@
-from ..infra.repository.InMemoryBellNotificationRepository import InMemoryBellNotificationRepository
+from ..infra.repository.PostgresBellNotificationRepository import PostgresBellNotificationRepository
 from .UserBellService import (
     CountUnreadNotificationsService,
     CreateNotificationService,
@@ -9,7 +9,7 @@ from .UserBellService import (
 
 
 class UserBellContext:
-    repository = InMemoryBellNotificationRepository()
+    repository = PostgresBellNotificationRepository()
 
     @staticmethod
     def create_notification_service():
@@ -30,4 +30,3 @@ class UserBellContext:
     @staticmethod
     def mark_all_notifications_as_read_service():
         return MarkAllNotificationsAsReadService(UserBellContext.repository)
-

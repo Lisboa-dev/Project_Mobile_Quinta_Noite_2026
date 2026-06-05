@@ -1,17 +1,7 @@
 import os
-from pathlib import Path
-
-
-BASE_DIR = Path(__file__).resolve().parents[3]
-DEFAULT_SQLITE_PATH = BASE_DIR / "agenda.sqlite3"
-
-
 def get_database_url() -> str:
-    return os.getenv("AGENDA_DATABASE_URL", f"sqlite:///{DEFAULT_SQLITE_PATH}")
+    return os.getenv("AGENDA_DATABASE_URL", "postgresql://postgres:password@agenda-postgres:5432/agendadb")
 
 
-def get_sqlite_path(database_url: str | None = None) -> Path:
-    url = database_url or get_database_url()
-    if not url.startswith("sqlite:///"):
-        return DEFAULT_SQLITE_PATH
-    return Path(url.replace("sqlite:///", "", 1))
+def get_sqlite_path(database_url: str | None = None):
+    raise RuntimeError("agendaService now uses Postgres; use get_database_url instead")

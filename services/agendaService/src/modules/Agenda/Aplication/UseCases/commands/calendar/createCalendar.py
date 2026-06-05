@@ -35,7 +35,7 @@ class CreateCalendarUseCase:
             data = await self._baseData.mont(command.day, command.ano)
             rules = await self._repositoryRule.getDayRules()
             
-            if(data and rules):
+            if data:
                 
                 days = []
                 for d in data:
@@ -54,7 +54,7 @@ class CreateCalendarUseCase:
                             context={"day": str(d)},
                         )
                 self._bus.emit(CreateCalendarEvent(days=days, year=str(command.ano)))
-                return True
+                return days
             
         except Exception as e:
             await self._repositoryCalendar.delete(command.ano)

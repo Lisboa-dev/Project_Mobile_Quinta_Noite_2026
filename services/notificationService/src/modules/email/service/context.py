@@ -1,10 +1,10 @@
 from ..infra.mailer.ConsoleEmailSender import ConsoleEmailSender
-from ..infra.repository.InMemoryEmailRepository import InMemoryEmailRepository
+from ..infra.repository.PostgresEmailRepository import PostgresEmailRepository
 from .EmailService import ListSentEmailsService, SendEmailService
 
 
 class EmailContext:
-    repository = InMemoryEmailRepository()
+    repository = PostgresEmailRepository()
     sender = ConsoleEmailSender()
 
     @staticmethod
@@ -14,4 +14,3 @@ class EmailContext:
     @staticmethod
     def list_sent_emails_service():
         return ListSentEmailsService(EmailContext.repository)
-

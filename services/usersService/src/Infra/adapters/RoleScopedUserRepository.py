@@ -1,6 +1,6 @@
-from services.usersService.src.infra.config.db.liteSql.LiteSql import get_query
-from services.usersService.src.infra.models.sqlAlchemy.UserSqlSchamy import CargoEnum, Usuario
-from services.usersService.src.modules.users.domain.entities.UserEntity import User
+from src.infra.config.db.liteSql.LiteSql import get_query
+from src.infra.models.sqlAlchemy.UserSqlSchamy import CargoEnum, Usuario
+from src.modules.users.domain.entities.UserEntity import User
 
 from .UserRepositorySqlAlchemy import UserRepository
 

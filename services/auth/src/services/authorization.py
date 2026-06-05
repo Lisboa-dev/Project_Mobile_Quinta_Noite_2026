@@ -8,6 +8,7 @@ import httpx
 from starlette.requests import Request
 
 from ..config import get_settings
+from .event_log import log_event
 
 
 READ_METHODS = {"GET", "HEAD", "OPTIONS"}
@@ -70,6 +71,11 @@ class OpenFGAAuthorizationService:
                 return AuthorizationDecision(True, f"openfga_error_fail_open:{exc.__class__.__name__}")
             return AuthorizationDecision(False, f"openfga_error:{exc.__class__.__name__}")
 
+        log_event(
+            "AuthorizationChecked",
+            "auth.authorization.checked",
+            {"user_id": user_id, "role": role, "service": service, "relation": relation, "allowed": allowed},
+        )
         return AuthorizationDecision(allowed, None if allowed else "forbidden")
 
     def _normalize_role(self, role: str) -> str:

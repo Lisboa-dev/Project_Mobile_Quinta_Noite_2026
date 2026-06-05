@@ -1,18 +1,63 @@
-import sqlite3
 from contextlib import contextmanager
+from typing import Any
 
-from src.infra.config.db.database import get_sqlite_path
+import psycopg2
+from psycopg2.extras import RealDictCursor
+
+from src.infra.config.settings import settings
+
+
+class CursorAdapter:
+    def __init__(self, cursor):
+        self._cursor = cursor
+
+    @property
+    def rowcount(self) -> int:
+        return self._cursor.rowcount
+
+    def execute(self, sql: str, params: tuple[Any, ...] | None = None):
+        return self._cursor.execute(sql.replace("?", "%s"), params)
+
+    def fetchone(self):
+        return self._cursor.fetchone()
+
+    def fetchall(self):
+        return self._cursor.fetchall()
+
+    def __iter__(self):
+        return iter(self._cursor.fetchall())
+
+
+class ConnectionAdapter:
+    def __init__(self, connection):
+        self._connection = connection
+        self._cursor = connection.cursor(cursor_factory=RealDictCursor)
+
+    def execute(self, sql: str, params: tuple[Any, ...] | None = None) -> CursorAdapter:
+        self._cursor.execute(sql.replace("?", "%s"), params)
+        return CursorAdapter(self._cursor)
+
+    def executescript(self, script: str) -> None:
+        self._cursor.execute(script)
+
+    def commit(self) -> None:
+        self._connection.commit()
+
+    def rollback(self) -> None:
+        self._connection.rollback()
+
+    def close(self) -> None:
+        self._cursor.close()
+        self._connection.close()
 
 
 class Database:
     def __init__(self, database_url: str | None = None):
-        self.path = get_sqlite_path(database_url)
-        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self.database_url = database_url or settings.database_url.replace("+asyncpg", "")
 
     @contextmanager
     def connect(self):
-        connection = sqlite3.connect(self.path)
-        connection.row_factory = sqlite3.Row
+        connection = ConnectionAdapter(psycopg2.connect(self.database_url))
         try:
             yield connection
             connection.commit()
