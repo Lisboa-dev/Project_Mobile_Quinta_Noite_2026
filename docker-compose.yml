@@ -27,10 +27,23 @@ services:
       - web
 
   rabbitmq:
-    image: rabbitmq:3.9.16-management
+    image: rabbitmq:3.13-management
+    profiles:
+      - local-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-guest}
     ports:
-      - "5672:5672"
-      - "15672:15672"
+      - "${RABBITMQ_PORT:-5672}:5672"
+      - "${RABBITMQ_MANAGEMENT_PORT:-15672}:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
     networks:
       - web
 
@@ -119,10 +132,59 @@ services:
       - web
       - openfga-net
 
+  prometheus:
+    image: prom/prometheus:v2.55.1
+    profiles:
+      - observability
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.retention.time=15d
+    volumes:
+      - ./services/analyticService/observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    networks:
+      - web
+
+  grafana:
+    image: grafana/grafana-oss:11.3.1
+    profiles:
+      - observability
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./services/analyticService/observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./services/analyticService/observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - "${GRAFANA_PORT:-3001}:3000"
+    networks:
+      - web
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.114.0
+    profiles:
+      - observability
+    command:
+      - --config=/etc/otelcol-contrib/config.yml
+    volumes:
+      - ./services/analyticService/observability/otel-collector.yml:/etc/otelcol-contrib/config.yml:ro
+    ports:
+      - "${OTEL_GRPC_PORT:-4317}:4317"
+      - "${OTEL_HTTP_PORT:-4318}:4318"
+      - "${OTEL_PROM_EXPORTER_PORT:-9464}:9464"
+    networks:
+      - web
+
 networks:
   web:
     name: web
   openfga-net:
 
 volumes:
+  rabbitmq-data:
   openfga-postgres-data:
+  prometheus-data:
+  grafana-data:

@@ -9,11 +9,12 @@ class Doctor:
    
     
     #id_extern: str,
-    def __init__(self, name: str, rules: list[BaseRule] | None = None, id: str | None = None, availability: bool = True):
+    def __init__(self, name: str, externId: str | None = None, rules: list[BaseRule] | None = None, id: str | None = None, availability: bool = True):
         self._id = ID(id)
         self._name = name
         self._rules = rules or []
         self._availability = availability
+        self._extern_id = externId or str(self._id)
         
         
         
@@ -28,19 +29,19 @@ class Doctor:
         
     def update(self, name: str | None = None, rules: list[BaseRule] | None = None, availability: bool | None = None):
         if name is not None:
-            self._name = name
+            self.name = name
         if rules is not None:
-            self._rules = rules
+            self.rules = rules
         if availability is not None:
-            self._availability = availability
+            self.availability = availability
         return self
     
     def delete(self) -> bool:
-        self._availability = False
+        self.availability = False
         return True
         
     def updateAvailability(self, availability: bool):
-        self._availability = availability
+        self.availability = availability
         return self
         
 
@@ -51,7 +52,7 @@ class Doctor:
         
         
     def updateRules(self, rules: list[BaseRule]):
-        self._rules = rules
+        self.rules = rules
         
     def deleteRule(self, rule: BaseRule):
         self._rules.remove(rule)
@@ -62,29 +63,61 @@ class Doctor:
         
         
     def updateClinicRules(self, rules: list[BaseRule]):
-        self._rules = rules
+        self.rules = rules
         
     def deleteClinicRule(self, rule: BaseRule):
         self._rules.remove(rule)
         
     
     def deleteClinicRules(self):
-        self._rules = []
+        self.rules = []
 
     @property
     def id(self) -> ID:
         return self._id
 
+    @id.setter
+    def id(self, value: ID | str) -> None:
+        self._id = value if isinstance(value, ID) else ID(value)
+
     @property
     def name(self) -> str:
         return self._name
+
+    @name.setter
+    def name(self, value: str) -> None:
+        self._name = value
 
     @property
     def rules(self) -> list[BaseRule]:
         return self._rules
 
+    @rules.setter
+    def rules(self, value: list[BaseRule] | None) -> None:
+        self._rules = value or []
+
     @property
     def availability(self) -> bool:
         return self._availability
+
+    @availability.setter
+    def availability(self, value: bool) -> None:
+        self._availability = bool(value)
+
+    @property
+    def extern_id(self) -> str:
+        return self._extern_id
+
+    @extern_id.setter
+    def extern_id(self, value: str) -> None:
+        self._extern_id = value
+
+    @property
+    def externId(self) -> str:
+        return self._extern_id
+
+    @externId.setter
+    def externId(self, value: str) -> None:
+        self._extern_id = value
     
     

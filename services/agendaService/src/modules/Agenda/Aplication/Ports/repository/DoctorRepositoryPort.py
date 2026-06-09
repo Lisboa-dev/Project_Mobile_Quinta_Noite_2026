@@ -16,7 +16,6 @@ class DoctorRepositoryPort(ABC):
     @abstractmethod
     async def delete(self, doctor_id: str) -> None:
         pass
-
     async def getDoctor(self, doctor_id: str) -> Any:
         pass
 

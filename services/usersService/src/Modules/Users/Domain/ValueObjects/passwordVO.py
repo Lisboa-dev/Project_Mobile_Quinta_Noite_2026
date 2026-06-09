@@ -5,14 +5,12 @@ from ..exceptions.DomainExceptions import InvalidPasswordException
 
 
 class Password:
-    def __init__(self, value: str | None, hashed: bool = False):
-        if value is None:
-            self.value = None
-            return
-        if hashed:
-            self.value = value
-            return
+    def __init__(self, value:str):
+        self._value = value
 
+    @staticmethod
+    def _hash_password(value: str) -> "str":
+        
         value = value.strip()
         if len(value) < 8:
             raise InvalidPasswordException("senha deve ter pelo menos 8 caracteres")
@@ -26,22 +24,19 @@ class Password:
             raise InvalidPasswordException("senha deve conter um numero")
         if not re.search(r"[!@#$%^&*(),.?\":{}|<>]", value):
             raise InvalidPasswordException("senha deve conter um caractere especial")
-        self.value = self._hash_password(value)
-
-    @staticmethod
-    def _hash_password(value: str) -> str:
+        
         return hashlib.sha256(value.encode("utf-8")).hexdigest()
 
     @property
     def hash(self) -> str | None:
-        return self.value
+        return self._value
 
     @property
-    def valor(self) -> str | None:
-        return self.value
+    def value(self) -> str | None:
+        return self._value
 
     def verify(self, value: str) -> bool:
-        return self.value == self._hash_password(value)
+        return self._value == self._hash_password(value)
 
     def __str__(self) -> str:
         return "********"

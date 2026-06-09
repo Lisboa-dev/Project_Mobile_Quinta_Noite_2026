@@ -1,10 +1,10 @@
 from src.infra.adapter.repository.base import SQLiteRepository
+from src.infra.mapper.DomainMapper import PatientMapper
 
 
 class PatientRepository(SQLiteRepository):
     async def save(self, patient) -> None:
         patient_id = self._entity_id(patient)
-        data = self._load(self._dump(patient))
         with self._db.connect() as connection:
             connection.execute(
                 """
@@ -15,7 +15,7 @@ class PatientRepository(SQLiteRepository):
                     data = excluded.data,
                     updated_at = CURRENT_TIMESTAMP
                 """,
-                (patient_id, data.get("name", ""), self._dump(patient)),
+                (patient_id, patient.name, self._dump(patient)),
             )
         await self._cache_entity("patients", patient_id, patient)
 
@@ -27,7 +27,7 @@ class PatientRepository(SQLiteRepository):
         await self._invalidate_entity("patients", patient_id)
 
     async def getPacient(self, patient_id: str):
-        return await self._fetch_json_cached("patients", patient_id)
+        return PatientMapper.toDomain(await self._fetch_json_cached("patients", patient_id))
 
     async def getPatient(self, patient_id: str):
         return await self.getPacient(patient_id)

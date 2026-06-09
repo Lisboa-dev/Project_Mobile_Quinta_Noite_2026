@@ -1,6 +1,14 @@
-from .IAdminRepository import IAdminRepository
-from .IAtendenteRepository import IAtendenteRepository
-from .IMedicRepository import IMedicRepository
-from .IUserRepository import IUserRepository
+from .MedicRepositoryPort import IMedicRepository, MedicRepositoryPort
+from .UserRepositoryPort import IUserRepository, UserRepositoryPort
 
-__all__ = ["IAdminRepository", "IAtendenteRepository", "IMedicRepository", "IUserRepository"]
+IAdminRepository = UserRepositoryPort
+IAtendenteRepository = UserRepositoryPort
+
+__all__ = [
+    "IAdminRepository",
+    "IAtendenteRepository",
+    "IMedicRepository",
+    "IUserRepository",
+    "MedicRepositoryPort",
+    "UserRepositoryPort",
+]

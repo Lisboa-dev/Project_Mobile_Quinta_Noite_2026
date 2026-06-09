@@ -1,13 +1,13 @@
 from src.infra.adapter.repository.base import SQLiteRepository
+from src.infra.mapper.DomainMapper import DayMapper
 from src.modules.agenda.domain.entities import Day
 
 
 class CalendarRepository(SQLiteRepository):
     async def save(self, calendar) -> None:
         day = calendar
-        data = self._load(self._dump(day))
-        date = data.get("date", {})
-        day_id = str(data.get("id") or f"{date.get('year')}-{date.get('month')}-{date.get('day')}")
+        date = day.date
+        day_id = str(day.id)
         with self._db.connect() as connection:
             connection.execute(
                 """
@@ -23,10 +23,10 @@ class CalendarRepository(SQLiteRepository):
                 """,
                 (
                     day_id,
-                    int(date.get("year", 0)),
-                    int(date.get("month", 0)),
-                    int(date.get("day", 0)),
-                    int(data.get("weekday", 0)),
+                    int(date.year),
+                    int(date.month),
+                    int(date.day),
+                    int(day.weekday),
                     self._dump(day),
                 ),
             )
@@ -39,7 +39,7 @@ class CalendarRepository(SQLiteRepository):
         await self.save(day)
 
     async def get(self, day_id: str):
-        return await self._fetch_json_cached("days", day_id)
+        return DayMapper.toDomain(await self._fetch_json_cached("days", day_id))
 
     async def delete(self, ano: str | int | None = None) -> None:
         with self._db.connect() as connection:

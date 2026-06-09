@@ -1,67 +1,42 @@
-from importlib import import_module
+import pytest
 
 
-doctor_module = import_module("src.modules.doctorDashboard.infra.repository.InMemoryDoctorAnalyticsRepository")
-business_module = import_module("src.modules.operationsCenter.infra.repository.InMemoryBusinessAnalyticsRepository")
+@pytest.mark.asyncio
+async def test_event_ingestion_saves_user_event(analytic_provider):
+    repository = analytic_provider.event_repository()
+    service = analytic_provider.event_ingestion_service(repository)
+
+    await service.ingest({"event": "DoctorCreatedEvent", "doctor_id": "doctor-1"}, "users.doctor.created")
+
+    assert repository.items[0]["source_service"] == "users-service"
+    assert repository.items[0]["event_name"] == "DoctorCreatedEvent"
+    assert repository.items[0]["payload"]["doctor_id"] == "doctor-1"
 
 
-class FakeCursor:
-    def __init__(self, row):
-        self.row = row
+def test_event_ingestion_lists_recent_events(analytic_provider):
+    repository = analytic_provider.event_repository()
+    service = analytic_provider.event_ingestion_service(repository)
 
-    def execute(self, *_args, **_kwargs):
-        return None
+    repository.save({"event": "OlderEvent"}, "agenda.consultation.created")
+    repository.save({"event": "NewerEvent"}, "users.doctor.created")
 
-    def fetchone(self):
-        return self.row
+    recent = service.list_recent(limit=1)
 
-    def __enter__(self):
-        return self
-
-    def __exit__(self, *_args):
-        return False
+    assert len(recent) == 1
+    assert recent[0]["event_name"] == "NewerEvent"
 
 
-class FakeConnection:
-    def __init__(self, row):
-        self.row = row
+def test_event_ingestion_counts_by_source(analytic_provider):
+    repository = analytic_provider.event_repository()
+    service = analytic_provider.event_ingestion_service(repository)
 
-    def cursor(self):
-        return FakeCursor(self.row)
+    repository.save({"event": "ConsultationCreatedEvent"}, "agenda.consultation.created")
+    repository.save({"event": "DoctorCreatedEvent"}, "users.doctor.created")
+    repository.save({"event": "DoctorUpdatedEvent"}, "users.doctor.updated")
 
+    totals = service.count_by_source()
 
-class FakeConnect:
-    def __init__(self, row):
-        self.row = row
-
-    def __enter__(self):
-        return FakeConnection(self.row)
-
-    def __exit__(self, *_args):
-        return False
-
-
-def test_doctor_dashboard_statistics(monkeypatch):
-    monkeypatch.setattr(
-        doctor_module,
-        "connect",
-        lambda: FakeConnect({"scheduled": 10, "finished": 8, "canceled": 1}),
-    )
-
-    dashboard = doctor_module.InMemoryDoctorAnalyticsRepository().get_dashboard("doctor-1")
-
-    assert dashboard["productivity"]["scheduled_appointments"] == 10
-    assert dashboard["patient_flow"]["no_show_rate"] == 0.1
-
-
-def test_admin_dashboard_statistics(monkeypatch):
-    monkeypatch.setattr(
-        business_module,
-        "connect",
-        lambda: FakeConnect({"scheduled": 20, "finished": 15, "canceled": 2, "doctors": 3, "patients": 12}),
-    )
-
-    dashboard = business_module.InMemoryBusinessAnalyticsRepository().get_dashboard()
-
-    assert dashboard["appointments"]["occupancy_rate"] == 0.75
-    assert dashboard["revenue"]["gross_amount"] == 2700.0
+    assert totals == [
+        {"source_service": "agenda-service", "total": 1},
+        {"source_service": "users-service", "total": 2},
+    ]

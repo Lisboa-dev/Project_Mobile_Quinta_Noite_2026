@@ -1,0 +1,305 @@
+# Lista de mock data
+
+Este arquivo consolida um exemplar de cada grupo de dados mock/seed encontrado no projeto. As origens principais analisadas foram:
+
+- `services/usersService/tests/mock_data.py`
+- `services/usersService/src/server.py`
+- `services/auth/tests/mock_data.py`
+- `services/agendaService/tests/mock_data.py`
+- `services/agendaService/tests/unitario/consulta/test_list_agenda.py`
+- `services/notificationService/tests/conftest.py`
+- `services/analyticService/tests/mock_data.py`
+
+## Usuarios base
+
+### Admin
+
+Origem: `services/usersService/tests/mock_data.py`
+
+```json
+{
+  "userName": "admin",
+  "email": "admin@example.com",
+  "name": "Admin Root",
+  "password": "Admin123!",
+  "role": "ADMIN"
+}
+```
+
+Tambem existe um seed de runtime em `services/usersService/src/server.py`:
+
+```json
+{
+  "userName": "admin",
+  "email": "admin@clinica.local",
+  "name": "Admin Sistema",
+  "password": "Admin123!",
+  "role": "ADMIN"
+}
+```
+
+### Doctor
+
+Origem: `services/usersService/tests/mock_data.py`
+
+```json
+{
+  "userName": "dra.ana",
+  "email": "ana@example.com",
+  "name": "Ana Souza",
+  "password": "Admin123!",
+  "crm": "CRM-12345",
+  "role": "MEDICO"
+}
+```
+
+Seed de runtime equivalente:
+
+```json
+{
+  "userName": "medico",
+  "email": "medico@clinica.local",
+  "name": "Dra. Ana Lima",
+  "password": "Medico123!",
+  "crm": "CRM-SEED-001",
+  "role": "MEDICO"
+}
+```
+
+### Atendent
+
+Origem: seed de runtime em `services/usersService/src/server.py`
+
+```json
+{
+  "userName": "atendente",
+  "email": "atendente@clinica.local",
+  "name": "Atendente Clinica",
+  "password": "Atendente123!",
+  "role": "ATENDENTE"
+}
+```
+
+Observacao: nao ha `MOCK_ATENDENT` explicito em `services/usersService/tests/mock_data.py`; o exemplar vem do seed usado quando o `users-service` inicia.
+
+### Pacient
+
+Origem: seed de runtime em `services/usersService/src/server.py`
+
+```json
+{
+  "userName": "paciente",
+  "email": "paciente@clinica.local",
+  "name": "Joao Paciente",
+  "password": "Paciente123!",
+  "role": "PACIENTE"
+}
+```
+
+Observacao: nao ha `MOCK_PACIENT` explicito em `services/usersService/tests/mock_data.py`; o exemplar vem do seed usado quando o `users-service` inicia.
+
+## Auth
+
+### Login
+
+Origem: `services/auth/tests/mock_data.py`
+
+```json
+{
+  "email": "admin@example.com",
+  "name": "admin",
+  "password": "Admin123!"
+}
+```
+
+### User id autenticado
+
+Origem: `services/auth/tests/mock_data.py`
+
+```json
+{
+  "user_id": "auth-user-1"
+}
+```
+
+## Agenda
+
+### Dia de calendario
+
+Origem: `services/agendaService/tests/mock_data.py`, funcao `calendar_days()`
+
+```json
+{
+  "rooms": [],
+  "date": {
+    "day": 1,
+    "month": 6,
+    "year": 2026
+  },
+  "weekday": 1,
+  "availability": true,
+  "status": "AVAILABLE",
+  "rules": []
+}
+```
+
+### Regra base de dia
+
+Origem: `services/agendaService/tests/mock_data.py`, funcao `base_day_rules()`
+
+```json
+{
+  "type": "GenericRule",
+  "ruleEffect": "ADD",
+  "targetType": "DAY",
+  "rangeTime": {
+    "start": "08:00",
+    "end": "12:00"
+  },
+  "description": "mock morning schedule",
+  "nome": "mock-day-rule"
+}
+```
+
+### Agenda/consulta simples
+
+Origem: `services/agendaService/tests/unitario/consulta/test_list_agenda.py`
+
+```json
+{
+  "id": 1,
+  "paciente": "Joao Silva",
+  "profissional": "Dra. Maria Souza",
+  "data_hora": "2026-07-01T10:00:00",
+  "horario": "10:00"
+}
+```
+
+### Segunda agenda/consulta simples
+
+Origem: `services/agendaService/tests/unitario/consulta/test_list_agenda.py`
+
+```json
+{
+  "id": 2,
+  "paciente": "Ana Pereira",
+  "profissional": "Dr. Carlos Lima",
+  "data_hora": "2026-07-01T11:00:00",
+  "horario": "11:00"
+}
+```
+
+## Notification
+
+### Notificacao
+
+Origem: `services/notificationService/tests/conftest.py`, fixture `sample_notification`
+
+```json
+{
+  "id": "notification-1",
+  "user_id": "user-1",
+  "title": "Agenda atualizada",
+  "message": "Sua consulta foi atualizada.",
+  "channel": "bell",
+  "link": "/agenda/apt-1",
+  "read": false,
+  "metadata": {
+    "appointment_id": "apt-1"
+  },
+  "created_at": "2026-06-08T10:00:00Z"
+}
+```
+
+### Evento de notificacao customizada
+
+Origem: `services/notificationService/tests/test_notification_service.py`
+
+```json
+{
+  "event": "custom.updated",
+  "data": {
+    "user_id": "user-2",
+    "title": "Consulta atualizada",
+    "message": "Seu horario mudou.",
+    "link": "/agenda/apt-2"
+  },
+  "routing_key": "custom.updated"
+}
+```
+
+### Evento de appointment criado
+
+Origem: `services/notificationService/tests/test_notification_service.py`
+
+```json
+{
+  "event": "agenda.appointment.created",
+  "data": {
+    "patient_id": "patient-1",
+    "doctor_id": "doctor-1",
+    "scheduler_id": "patient-1",
+    "appointment_id": "apt-1",
+    "appointment_type": "retorno"
+  },
+  "routing_key": "agenda.appointment.created"
+}
+```
+
+## Analytics
+
+### Doctor dashboard
+
+Origem: `services/analyticService/tests/mock_data.py`
+
+```json
+{
+  "doctor_id": "doctor-1",
+  "period": "last_30_days",
+  "productivity": {
+    "scheduled_appointments": 12
+  }
+}
+```
+
+### Business dashboard
+
+Origem: `services/analyticService/tests/mock_data.py`
+
+```json
+{
+  "period": "last_30_days",
+  "appointments": {
+    "scheduled": 30,
+    "finished": 24,
+    "occupancy_rate": 0.8
+  }
+}
+```
+
+### Network snapshot
+
+Origem: `services/analyticService/tests/mock_data.py`
+
+```json
+{
+  "source": "mock",
+  "network_health_score": 99.0,
+  "services": [],
+  "queue_depth": {}
+}
+```
+
+## Resumo rapido
+
+| Categoria | Exemplar escolhido | Origem |
+| --- | --- | --- |
+| Admin | `admin@example.com` / `admin@clinica.local` | Mock users + seed users |
+| Doctor | `ana@example.com` / `medico@clinica.local` | Mock users + seed users |
+| Atendent | `atendente@clinica.local` | Seed users |
+| Pacient | `paciente@clinica.local` | Seed users |
+| Auth login | `admin@example.com` | Mock auth |
+| Calendar day | `2026-06-01` | Mock agenda |
+| Agenda item | `Joao Silva` com `Dra. Maria Souza` | Teste unitario agenda |
+| Notification | `notification-1` | Fixture notification |
+| Analytics dashboard | `doctor-1` | Mock analytics |

@@ -1,44 +1,49 @@
 from contextlib import asynccontextmanager
+import asyncio
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI
 
-from src.infra.database import init_db
-from src.infra.messaging import hub, start_consumer_task
-from src.modules.email.api.router import router as email_router
-from src.modules.userBell.api.router import router as user_bell_router
+from src.api.router import router as api_router
+from src.infra.database import NotificationRepository, init_db
+from src.infra.messaging import RabbitMQConsumer
+from src.infra.websocket import events_hub, notifications_hub
+from src.observability import setup_observability
+from src.services import NotificationDispatcher, NotificationQueryService
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
-    start_consumer_task()
-    yield
+    repository = NotificationRepository()
+    dispatcher = NotificationDispatcher(
+        repository=repository,
+        notifications_hub=notifications_hub,
+        events_hub=events_hub,
+    )
+    consumer = RabbitMQConsumer()
+
+    app.state.notification_query_service = NotificationQueryService(repository=repository)
+    app.state.notification_dispatcher = dispatcher
+    app.state.rabbitmq_consumer = consumer
+
+    consumer_task = asyncio.create_task(consumer.start(dispatcher.dispatch_event))
+    app.state.rabbitmq_consumer_task = consumer_task
+    try:
+        yield
+    finally:
+        consumer_task.cancel()
+        await consumer.close()
 
 
 app = FastAPI(
     title="Notification Service",
     version="1.0.0",
-    description="Servico de notificacoes orientado a features.",
+    description="Servico de notificacoes orientado por eventos.",
     lifespan=lifespan,
 )
 
-app.include_router(email_router)
-app.include_router(user_bell_router)
-
-
-@app.get("/health", tags=["health"])
-def health_check():
-    return {"status": "ok"}
-
-
-@app.websocket("/ws/events")
-async def websocket_events(websocket: WebSocket):
-    await hub.connect(websocket)
-    try:
-        while True:
-            await websocket.receive_text()
-    except WebSocketDisconnect:
-        hub.disconnect(websocket)
+app.include_router(api_router)
+setup_observability(app, "notification-service")
 
 
 def main():

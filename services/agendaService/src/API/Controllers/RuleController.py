@@ -10,12 +10,12 @@ from src.api.provider import (
     get_list_rules_query_use_case,
     get_rule_by_id_query_use_case,
 )
-from src.modules.agenda.aplication.dtos.useCase.command.RulesUseCasesDTO import (
-    CreateBlockRuleCommand,
-    CreateGenericRuleCommand,
-    CreateSpecificDayRuleCommand,
-    CreateSpecificRuleCommand,
-    CreateWeekRuleCommand,
+from src.api.interfaces.rule import (
+    CreateBlockRuleRequest,
+    CreateGenericRuleRequest,
+    CreateSpecificDayRuleRequest,
+    CreateSpecificRuleRequest,
+    CreateWeekRuleRequest,
 )
 from src.modules.agenda.aplication.dtos.useCase.query import GetByIdQuery, ListQuery
 
@@ -38,31 +38,31 @@ async def get_rule(rule_id: str, use_case=Depends(get_rule_by_id_query_use_case)
 
 
 @routerRule.post("/block", status_code=status.HTTP_201_CREATED)
-async def create_block_rule(command: CreateBlockRuleCommand, use_case=Depends(get_create_block_rule_use_case)):
-    return {"created": await use_case.execute(command)}
+async def create_block_rule(request: CreateBlockRuleRequest, use_case=Depends(get_create_block_rule_use_case)):
+    return {"created": await use_case.execute(request.to_command())}
 
 
 @routerRule.post("/generic", status_code=status.HTTP_201_CREATED)
-async def create_generic_rule(command: CreateGenericRuleCommand, use_case=Depends(get_create_generic_rule_use_case)):
-    return {"created": await use_case.execute(command)}
+async def create_generic_rule(request: CreateGenericRuleRequest, use_case=Depends(get_create_generic_rule_use_case)):
+    return {"created": await use_case.execute(request.to_command())}
 
 
 @routerRule.post("/specific", status_code=status.HTTP_201_CREATED)
-async def create_specific_rule(command: CreateSpecificRuleCommand, use_case=Depends(get_create_specific_rule_use_case)):
-    return {"created": await use_case.execute(command)}
+async def create_specific_rule(request: CreateSpecificRuleRequest, use_case=Depends(get_create_specific_rule_use_case)):
+    return {"created": await use_case.execute(request.to_command())}
 
 
 @routerRule.post("/specific-day", status_code=status.HTTP_201_CREATED)
 async def create_specific_day_rule(
-    command: CreateSpecificDayRuleCommand,
+    request: CreateSpecificDayRuleRequest,
     use_case=Depends(get_create_specific_day_rule_use_case),
 ):
-    return {"created": await use_case.execute(command)}
+    return {"created": await use_case.execute(request.to_command())}
 
 
 @routerRule.post("/week", status_code=status.HTTP_201_CREATED)
-async def create_week_rule(command: CreateWeekRuleCommand, use_case=Depends(get_create_week_rule_use_case)):
-    return {"created": await use_case.execute(command)}
+async def create_week_rule(request: CreateWeekRuleRequest, use_case=Depends(get_create_week_rule_use_case)):
+    return {"created": await use_case.execute(request.to_command())}
 
 
 @routerRule.delete("/{rule_id}", status_code=status.HTTP_204_NO_CONTENT)

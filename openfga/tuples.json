@@ -110,6 +110,151 @@
         "user": "role:user#member",
         "relation": "reader",
         "object": "service:notification"
+      },
+      {
+        "user": "role:admin#member",
+        "relation": "assignee",
+        "object": "route_permission:users.admins.manage"
+      },
+      {
+        "user": "role:admin#member",
+        "relation": "assignee",
+        "object": "route_permission:users.doctors.create"
+      },
+      {
+        "user": "role:atendent#member",
+        "relation": "assignee",
+        "object": "route_permission:users.doctors.create"
+      },
+      {
+        "user": "role:attendant#member",
+        "relation": "assignee",
+        "object": "route_permission:users.doctors.create"
+      },
+      {
+        "user": "role:admin#member",
+        "relation": "assignee",
+        "object": "route_permission:users.users.manage"
+      },
+      {
+        "user": "role:atendent#member",
+        "relation": "assignee",
+        "object": "route_permission:users.users.manage"
+      },
+      {
+        "user": "role:attendant#member",
+        "relation": "assignee",
+        "object": "route_permission:users.users.manage"
+      },
+      {
+        "user": "role:admin#member",
+        "relation": "assignee",
+        "object": "route_permission:agenda.appointments.manage"
+      },
+      {
+        "user": "role:atendent#member",
+        "relation": "assignee",
+        "object": "route_permission:agenda.appointments.manage"
+      },
+      {
+        "user": "role:attendant#member",
+        "relation": "assignee",
+        "object": "route_permission:agenda.appointments.manage"
+      },
+      {
+        "user": "role:medic#member",
+        "relation": "assignee",
+        "object": "route_permission:agenda.appointments.manage"
+      },
+      {
+        "user": "role:doctor#member",
+        "relation": "assignee",
+        "object": "route_permission:agenda.appointments.manage"
+      },
+      {
+        "user": "role:pacient#member",
+        "relation": "assignee",
+        "object": "route_permission:agenda.appointments.create"
+      },
+      {
+        "user": "role:patient#member",
+        "relation": "assignee",
+        "object": "route_permission:agenda.appointments.create"
+      },
+      {
+        "user": "role:admin#member",
+        "relation": "assignee",
+        "object": "route_permission:agenda.resources.manage"
+      },
+      {
+        "user": "role:atendent#member",
+        "relation": "assignee",
+        "object": "route_permission:agenda.resources.manage"
+      },
+      {
+        "user": "role:attendant#member",
+        "relation": "assignee",
+        "object": "route_permission:agenda.resources.manage"
+      },
+      {
+        "user": "role:admin#member",
+        "relation": "assignee",
+        "object": "route_permission:notifications.admin.read"
+      },
+      {
+        "user": "role:pacient#member",
+        "relation": "assignee",
+        "object": "route_permission:notifications.patient.read"
+      },
+      {
+        "user": "role:patient#member",
+        "relation": "assignee",
+        "object": "route_permission:notifications.patient.read"
+      },
+      {
+        "user": "role:medic#member",
+        "relation": "assignee",
+        "object": "route_permission:notifications.doctor.read"
+      },
+      {
+        "user": "role:doctor#member",
+        "relation": "assignee",
+        "object": "route_permission:notifications.doctor.read"
+      },
+      {
+        "user": "role:admin#member",
+        "relation": "assignee",
+        "object": "route_permission:notifications.manage"
+      },
+      {
+        "user": "role:atendent#member",
+        "relation": "assignee",
+        "object": "route_permission:notifications.manage"
+      },
+      {
+        "user": "role:attendant#member",
+        "relation": "assignee",
+        "object": "route_permission:notifications.manage"
+      },
+      {
+        "user": "role:admin#member",
+        "relation": "assignee",
+        "object": "route_permission:analytics.operations.read"
+      },
+      {
+        "user": "role:admin#member",
+        "relation": "assignee",
+        "object": "route_permission:analytics.doctors.read"
+      },
+      {
+        "user": "role:medic#member",
+        "relation": "assignee",
+        "object": "route_permission:analytics.doctors.read"
+      },
+      {
+        "user": "role:doctor#member",
+        "relation": "assignee",
+        "object": "route_permission:analytics.doctors.read"
       }
     ]
   }

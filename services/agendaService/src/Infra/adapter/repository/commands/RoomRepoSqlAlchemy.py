@@ -1,10 +1,14 @@
 from src.infra.adapter.repository.base import SQLiteRepository
+from src.infra.cache import RuleOptimizationCache
+from src.infra.mapper.DomainMapper import RoomMapper
+from src.infra.mapper.DomainMapper import RuleMapper
 
 
 class RoomRepository(SQLiteRepository):
+    _rule_optimization_cache = RuleOptimizationCache()
+
     async def save(self, room) -> None:
         room_id = self._entity_id(room)
-        data = self._load(self._dump(room))
         with self._db.connect() as connection:
             connection.execute(
                 """
@@ -15,7 +19,7 @@ class RoomRepository(SQLiteRepository):
                     data = excluded.data,
                     updated_at = CURRENT_TIMESTAMP
                 """,
-                (room_id, data.get("name", ""), self._dump(room)),
+                (room_id, room.name, self._dump(room)),
             )
         await self._cache_entity("rooms", room_id, room)
 
@@ -31,11 +35,18 @@ class RoomRepository(SQLiteRepository):
         await self.delete(room_id)
 
     async def getRoom(self, room_id: str):
-        return await self._fetch_json_cached("rooms", room_id)
+        return RoomMapper.toDomain(await self._fetch_json_cached("rooms", room_id))
 
     async def getGenericRulesRoom(self) -> list:
+        return await self._rule_optimization_cache.get_room_rules(self._load_room_generic_rules)
+
+    async def _load_room_generic_rules(self) -> list:
         with self._db.connect() as connection:
             rows = connection.execute(
-                "SELECT data FROM rules WHERE target_type = 'ROOM' AND target IS NULL"
+                """
+                SELECT data FROM rules
+                WHERE (target_type IS NULL AND target IS NULL)
+                   OR (target_type = 'ROOM' AND target IS NULL)
+                """
             ).fetchall()
-            return [self._load(row["data"]) for row in rows]
+            return [RuleMapper.toDomain(self._load(row["data"])) for row in rows]

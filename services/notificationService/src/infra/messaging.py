@@ -1,78 +1,59 @@
-import asyncio
 import json
-import logging
 import os
+from collections.abc import Awaitable, Callable
 
 import aio_pika
 
-from src.infra.database import log_event
-from src.modules.userBell.api.schemas import BellNotificationRequest
-from src.modules.userBell.service.context import UserBellContext
+from src.infra.websocket import hub
 
 
-logger = logging.getLogger(__name__)
+EventHandler = Callable[[dict, str], Awaitable[None]]
 
 
-class WebSocketHub:
-    def __init__(self):
-        self.connections = []
+class RabbitMQConsumer:
+    def __init__(
+        self,
+        url: str | None = None,
+        queue_name: str | None = None,
+        exchanges: list[str] | None = None,
+        routing_keys: list[str] | None = None,
+    ):
+        self.url = url or os.getenv("RABBITMQ_URL", "amqp://guest:guest@rabbitmq:5672/")
+        self.queue_name = queue_name or os.getenv("NOTIFICATION_EVENTS_QUEUE", "notification.events")
+        self.exchanges = exchanges or [
+            os.getenv("USER_EVENTS_EXCHANGE", "users.events"),
+            os.getenv("RABBITMQ_EXCHANGE", "agenda.events"),
+        ]
+        configured_keys = os.getenv("NOTIFICATION_EVENT_ROUTING_KEYS", "#")
+        self.routing_keys = routing_keys or [key.strip() for key in configured_keys.split(",") if key.strip()]
+        self._connection: aio_pika.abc.AbstractRobustConnection | None = None
 
-    async def connect(self, websocket):
-        await websocket.accept()
-        self.connections.append(websocket)
+    async def start(self, handler: EventHandler) -> None:
+        self._connection = await aio_pika.connect_robust(self.url)
+        channel = await self._connection.channel()
+        await channel.set_qos(prefetch_count=20)
+        queue = await channel.declare_queue(self.queue_name, durable=True)
 
-    def disconnect(self, websocket):
-        if websocket in self.connections:
-            self.connections.remove(websocket)
+        for exchange_name in self.exchanges:
+            exchange = await channel.declare_exchange(exchange_name, aio_pika.ExchangeType.TOPIC, durable=True)
+            for routing_key in self.routing_keys:
+                await queue.bind(exchange, routing_key=routing_key)
 
-    async def broadcast(self, payload: dict):
-        for websocket in list(self.connections):
-            await websocket.send_json(payload)
+        async def on_message(message: aio_pika.abc.AbstractIncomingMessage) -> None:
+            async with message.process():
+                payload = json.loads(message.body.decode("utf-8"))
+                routing_key = message.routing_key or ""
+                await handler(payload, routing_key)
 
+        await queue.consume(on_message)
 
-hub = WebSocketHub()
-
-
-def _notification_from_event(payload: dict) -> BellNotificationRequest | None:
-    event = str(payload.get("event", "event"))
-    data = payload.get("data") or {}
-    user_id = str(data.get("user_id") or data.get("pacient_id") or data.get("patient_id") or data.get("id") or "system")
-    title = event.replace("Event", "")
-    return BellNotificationRequest(
-        user_id=user_id,
-        title=title,
-        message=f"Evento recebido: {event}",
-        link=None,
-        metadata=payload,
-    )
-
-
-async def consume_events() -> None:
-    url = os.getenv("RABBITMQ_URL", "amqp://guest:guest@rabbitmq:5672/")
-    connection = await aio_pika.connect_robust(url)
-    channel = await connection.channel()
-    queue = await channel.declare_queue(os.getenv("NOTIFICATION_EVENTS_QUEUE", "notification.events"), durable=True)
-    for exchange_name in (os.getenv("USER_EVENTS_EXCHANGE", "users.events"), os.getenv("RABBITMQ_EXCHANGE", "agenda.events")):
-        exchange = await channel.declare_exchange(exchange_name, aio_pika.ExchangeType.TOPIC, durable=True)
-        await queue.bind(exchange, routing_key="#")
-
-    async def handle(message: aio_pika.IncomingMessage):
-        async with message.process():
-            payload = json.loads(message.body.decode("utf-8"))
-            log_event(str(payload.get("event", "event")), message.routing_key, payload)
-            request = _notification_from_event(payload)
-            if request:
-                notification = UserBellContext.create_notification_service().execute(request)
-                await hub.broadcast({"event": "notification.created", "data": notification})
-
-    await queue.consume(handle)
+    async def close(self) -> None:
+        if self._connection is not None:
+            await self._connection.close()
+            self._connection = None
 
 
-def start_consumer_task() -> None:
-    async def _run():
-        try:
-            await consume_events()
-        except Exception:
-            logger.exception("notification RabbitMQ consumer did not start")
-
-    asyncio.get_running_loop().create_task(_run())
+async def start_consumer(handler: EventHandler) -> RabbitMQConsumer:
+    consumer = RabbitMQConsumer()
+    await consumer.start(handler)
+    return consumer

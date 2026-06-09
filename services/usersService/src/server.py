@@ -3,11 +3,12 @@ import asyncio
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 
-from src.api.controllers import routerAdmins, routerAtendents, routerMedics, routerPacients
-from src.api.Provider import UserFactory
+from src.api.controllers import routerAdmins, routerAtendents, routerClientConfig, routerMedics, routerPacients, routerUsersCrud
+from src.api.provider import UserFactory
 from src.infra.adapters.UserRepositorySqlAlchemy import UserRepository
 from src.infra.config.db.liteSql.LiteSql import get_query, init_db
-from src.infra.models.sqlAlchemy.UserSqlSchamy import CargoEnum, Usuario
+from src.infra.models.sqlAlchemy.UserSqlSchamy import CargoEnum, Doctor, Usuario
+from src.observability import setup_observability
 from src.modules.users.domain.valueObjects.PasswordVO import Password
 
 
@@ -33,25 +34,29 @@ hub = WebSocketHub()
 
 def seed_users() -> None:
     seeds = [
-        ("admin", "Admin Sistema", "admin@clinica.local", "Admin123!", CargoEnum.ADMIN),
-        ("medico", "Dra. Ana Lima", "medico@clinica.local", "Medico123!", CargoEnum.MEDICO),
-        ("paciente", "Joao Paciente", "paciente@clinica.local", "Paciente123!", CargoEnum.PACIENTE),
-        ("atendente", "Atendente Clinica", "atendente@clinica.local", "Atendente123!", CargoEnum.ATENDENTE),
+        ("admin", "Admin Sistema", "admin@clinica.local", "Admin123!", CargoEnum.ADMIN, None),
+        ("medico", "Dra. Ana Lima", "medico@clinica.local", "Medico123!", CargoEnum.MEDICO, "CRM-SEED-001"),
+        ("paciente", "Joao Paciente", "paciente@clinica.local", "Paciente123!", CargoEnum.PACIENTE, None),
+        ("atendente", "Atendente Clinica", "atendente@clinica.local", "Atendente123!", CargoEnum.ATENDENTE, None),
     ]
     with get_query() as session:
-        for username, nome, email, password, cargo in seeds:
+        for username, nome, email, password, cargo, crm in seeds:
             exists = session.query(Usuario).filter(Usuario.userName == username).first()
             if exists:
+                if cargo == CargoEnum.MEDICO and crm and exists.doctor is None:
+                    session.add(Doctor(user_id=exists.id, crm=crm))
                 continue
-            session.add(
-                Usuario(
-                    userName=username,
-                    nome=nome,
-                    email=email,
-                    senha=Password(password).hash,
-                    cargo=cargo,
-                )
+            user = Usuario(
+                userName=username,
+                nome=nome,
+                email=email,
+                senha=Password(password).hash,
+                cargo=cargo,
             )
+            session.add(user)
+            session.flush()
+            if cargo == CargoEnum.MEDICO and crm:
+                session.add(Doctor(user_id=user.id, crm=crm))
 
 
 @asynccontextmanager
@@ -75,6 +80,9 @@ app.include_router(routerAdmins)
 app.include_router(routerAtendents)
 app.include_router(routerMedics)
 app.include_router(routerPacients)
+app.include_router(routerUsersCrud)
+app.include_router(routerClientConfig)
+setup_observability(app, "users-service")
 
 
 @app.get("/health", tags=["health"])

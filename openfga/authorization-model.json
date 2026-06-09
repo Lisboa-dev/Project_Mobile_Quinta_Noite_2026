@@ -106,6 +106,31 @@
           }
         }
       }
+    },
+    {
+      "type": "route_permission",
+      "relations": {
+        "assignee": {
+          "this": {}
+        },
+        "can_access": {
+          "computedUserset": {
+            "relation": "assignee"
+          }
+        }
+      },
+      "metadata": {
+        "relations": {
+          "assignee": {
+            "directly_related_user_types": [
+              {
+                "type": "role",
+                "relation": "member"
+              }
+            ]
+          }
+        }
+      }
     }
   ]
 }

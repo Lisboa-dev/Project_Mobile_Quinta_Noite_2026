@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 
+from src.api.dependencies import require_admin
 from src.api.provider import (
     get_create_room_use_case,
     get_delete_room_use_case,
@@ -7,19 +8,16 @@ from src.api.provider import (
     get_room_by_id_query_use_case,
     get_update_room_use_case,
 )
-from src.modules.agenda.aplication.dtos.useCase.command.RoomUseCasesDTO import (
-    CreateRoomCommand,
-    UpdateRoomCommand,
-)
+from src.api.interfaces.room import CreateRoomRequest, UpdateRoomRequest
 from src.modules.agenda.aplication.dtos.useCase.query import GetByIdQuery, ListQuery
 
 
-routerRoom = APIRouter(prefix="/rooms", tags=["Rooms"])
+routerRoom = APIRouter(prefix="/rooms", tags=["Rooms"], dependencies=[Depends(require_admin)])
 
 
 @routerRoom.post("/", status_code=status.HTTP_201_CREATED)
-async def create_room(command: CreateRoomCommand, use_case=Depends(get_create_room_use_case)):
-    result = await use_case.execute(command.name)
+async def create_room(request: CreateRoomRequest, use_case=Depends(get_create_room_use_case)):
+    result = await use_case.execute(request.name, triggered_by_id=request.triggered_by_id)
     return {"created": result}
 
 
@@ -43,10 +41,10 @@ async def list_rooms(
 @routerRoom.put("/{room_id}")
 async def update_room(
     room_id: str,
-    command: UpdateRoomCommand,
+    request: UpdateRoomRequest,
     use_case=Depends(get_update_room_use_case),
 ):
-    await use_case.execute(command)
+    await use_case.execute(request.to_command(room_id))
     return {"updated": True}
 
 

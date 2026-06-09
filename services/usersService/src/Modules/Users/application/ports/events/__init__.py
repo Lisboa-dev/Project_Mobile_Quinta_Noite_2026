@@ -1,3 +1,3 @@
-from .EventBusPort import EventBusPort, NullEventBus
+from .EventBusPort import EventBusPort
 
-__all__ = ["EventBusPort", "NullEventBus"]
+__all__ = ["EventBusPort"]

@@ -1,6 +1,7 @@
 from src.infra.config.db.liteSql.LiteSql import get_query
 from src.infra.models.sqlAlchemy.UserSqlSchamy import CargoEnum, Usuario
 from src.modules.users.domain.entities.UserEntity import User
+from sqlalchemy.orm import joinedload
 
 from .UserRepositorySqlAlchemy import UserRepository
 
@@ -10,16 +11,26 @@ class RoleScopedUserRepository(UserRepository):
         self.cargo = CargoEnum(cargo)
 
     def _matches_scope(self, user: User | None) -> bool:
-        return bool(user and user.cargo.valor == self.cargo.value)
+        cargo = getattr(user, "cargo", None)
+        if isinstance(cargo, tuple) and len(cargo) == 1:
+            cargo = cargo[0]
+        cargo_value = getattr(cargo, "valor", None) or getattr(cargo, "value", cargo)
+        return bool(user and cargo_value == self.cargo.value)
 
     def save(self, user: User) -> User:
-        user.cargo.value = self.cargo
+        user.cargo = type(user.cargo)(self.cargo.value)
         return super().save(user)
 
     def find_all(self) -> list[User]:
         with get_query() as session:
-            models = session.query(Usuario).filter(Usuario.cargo == self.cargo).all()
-            return [self._to_domain(model) for model in models]
+            models = (
+                session.query(Usuario)
+                .options(joinedload(Usuario.doctor))
+                .filter(Usuario.cargo == self.cargo)
+                .order_by(Usuario.id.asc())
+                .all()
+            )
+            return [user for user in (self._to_domain(model) for model in models) if user is not None]
 
     def find_by_id(self, id: int) -> User | None:
         user = super().find_by_id(id)

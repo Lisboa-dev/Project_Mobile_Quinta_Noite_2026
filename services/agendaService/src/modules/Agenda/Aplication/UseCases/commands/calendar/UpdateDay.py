@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from src.modules.agenda.aplication.dtos.exceptions import UpdateUseCaseException
+from src.modules.agenda.aplication.dtos.useCase.output import UseCaseOutputDTO
 from src.modules.agenda.aplication.events.CalendarEvent import UpdateDayEvent
 from src.modules.agenda.aplication.ports.events.BusPort import BusPort
 from src.modules.agenda.aplication.ports.repository.CalendarRepositoryPort import CalendarRepositoryPort
@@ -10,6 +11,7 @@ from src.modules.agenda.domain.entities import Day
 class UpdateDayCommand:
     id: str
     data: dict
+    triggered_by_id: str | None = None
 
 
 class UpdateDayUseCase:
@@ -17,16 +19,31 @@ class UpdateDayUseCase:
         self._repository = repository
         self._bus = bus
         
-    async def execute(self, command: UpdateDayCommand):
+    async def execute(self, command: UpdateDayCommand) -> UseCaseOutputDTO:
         try:
             data = await self._repository.get(command.id)
             if not isinstance(data, Day):
-                return False
+                return UseCaseOutputDTO.fail(
+                    use_case=self.__class__.__name__,
+                    action="update",
+                    resource="day",
+                    resource_id=command.id,
+                    triggered_by_id=command.triggered_by_id,
+                    message="Day not found",
+                )
             day = data
             dayUpdated = day.update(command.data)
             await self._repository.updateDay(dayUpdated)
-            self._bus.emit(UpdateDayEvent(dayUpdated))
-            return True
+            event = UpdateDayEvent.from_entity(dayUpdated, triggered_by_id=command.triggered_by_id)
+            await self._bus.emit(event)
+            return UseCaseOutputDTO.ok(
+                use_case=self.__class__.__name__,
+                action="updated",
+                resource="day",
+                resource_id=str(dayUpdated.date),
+                triggered_by_id=command.triggered_by_id,
+                event_name=event.EVENT_NAME,
+            )
         except Exception as e:
             raise UpdateUseCaseException(
                 code="UPDATE_DAY_ERROR",

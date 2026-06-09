@@ -1,22 +1,26 @@
 from .UserEntity import User
 
 
-class Admin(User):
+class Admin(User):  
     def __init__(
         self,
         userName: str,
         email: str,
-        nome: str,
+        name: str,
+        cpf:str,
         password: str | None = None,
-        id: int | None = None,
-        password_hashed: bool = False,
+        id: str | None = None,
+        profile_image_url: str | None = None,
+        profile_image_object: str | None = None,
     ):
         super().__init__(
             userName=userName,
             email=email,
-            nome=nome,
+            name=name,
             password=password,
-            cargo="ADMIN",
             id=id,
-            password_hashed=password_hashed,
+            profile_image_url=profile_image_url,
+            profile_image_object=profile_image_object,
         )
+        self.cargo = "ADMIN",
+        self.cpf = cpf

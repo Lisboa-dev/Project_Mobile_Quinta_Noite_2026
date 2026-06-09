@@ -7,10 +7,7 @@ from src.api.provider import (
     get_list_clinics_query_use_case,
     get_clinic_repository,
 )
-from src.modules.agenda.aplication.dtos.useCase.command.ClinicUseCasesDTO import (
-    CreateClinicCommand,
-    UpdateClinicCommand,
-)
+from src.api.interfaces.clinic import CreateClinicRequest, UpdateClinicRequest
 from src.modules.agenda.aplication.dtos.useCase.query import GetByIdQuery, ListQuery
 
 
@@ -18,8 +15,8 @@ routerClinic = APIRouter(prefix="/clinics", tags=["Clinics"])
 
 
 @routerClinic.post("/", status_code=status.HTTP_201_CREATED)
-async def create_clinic(command: CreateClinicCommand, use_case=Depends(get_create_clinic_use_case)):
-    result = await use_case.execute(command)
+async def create_clinic(request: CreateClinicRequest, use_case=Depends(get_create_clinic_use_case)):
+    result = await use_case.execute(request.to_command())
     return {"created": result}
 
 
@@ -43,14 +40,14 @@ async def list_clinics(
 @routerClinic.put("/{clinic_id}")
 async def update_clinic(
     clinic_id: str,
-    command: UpdateClinicCommand,
+    request: UpdateClinicRequest,
     repository=Depends(get_clinic_repository),
     query_use_case=Depends(get_clinic_by_id_query_use_case),
 ):
     clinic = await query_use_case.execute(GetByIdQuery(id=clinic_id))
     if not clinic:
         raise HTTPException(status_code=404, detail="Clinic not found")
-    await repository.update(command)
+    await repository.update(request.to_command(clinic_id))
     return {"updated": True}
 
 

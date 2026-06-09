@@ -1,10 +1,14 @@
 import enum
+from datetime import datetime
+from typing import Any
 
+from sqlalchemy import DateTime, ForeignKey
 from sqlalchemy import Enum as SAEnum
-from sqlalchemy import Integer, String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import Index, Integer, String, Text, func
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from ...config.db.liteSql.LiteSql import Base
+from src.infra.clients.postgres import Base
 
 
 class CargoEnum(str, enum.Enum):
@@ -16,16 +20,65 @@ class CargoEnum(str, enum.Enum):
     PACIENTE = "PACIENTE"
 
 
-class Usuario(Base):
-    __tablename__ = "usuarios"
+class UserModel(Base):
+    __tablename__ = "users"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    userName: Mapped[str] = mapped_column(String, nullable=False, unique=True)
-    nome: Mapped[str] = mapped_column(String, nullable=False)
-    email: Mapped[str] = mapped_column(String, nullable=False, unique=True)
-    senha: Mapped[str] = mapped_column(String, nullable=False)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    userName: Mapped[str] = mapped_column(String(80), nullable=False, unique=True, index=True)
+    nome: Mapped[str] = mapped_column(String(160), nullable=False)
+    email: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
+    senha: Mapped[str] = mapped_column(String(255), nullable=False)
     cargo: Mapped[CargoEnum] = mapped_column(
-        SAEnum(CargoEnum, name="cargo_enum"),
+        SAEnum(CargoEnum, name="users_cargo_enum", native_enum=False),
         nullable=False,
         default=CargoEnum.PACIENTE,
+        index=True,
     )
+    profile_image_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    profile_image_object: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )
+    doctor: Mapped["Doctor | None"] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan",
+        uselist=False,
+    )
+
+
+Index("ix_users_cargo_username", UserModel.cargo, UserModel.userName)
+
+
+class Doctor(Base):
+    __tablename__ = "doctors"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True)
+    crm: Mapped[str] = mapped_column(String(64), nullable=False, unique=True, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )
+
+    user: Mapped[UserModel] = relationship(back_populates="doctor")
+
+
+Usuario = UserModel
+
+
+class EventLog(Base):
+    __tablename__ = "event_logs"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    service_name: Mapped[str] = mapped_column(String(80), nullable=False)
+    event_name: Mapped[str] = mapped_column(String(160), nullable=False, index=True)
+    routing_key: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    payload: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)

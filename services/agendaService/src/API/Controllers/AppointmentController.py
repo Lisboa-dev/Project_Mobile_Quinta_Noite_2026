@@ -7,10 +7,10 @@ from src.api.provider import (
     get_list_appointments_query_use_case,
     get_update_appointment_use_case,
 )
-from src.modules.agenda.aplication.dtos.useCase.command.AppointmentUseCasesDTO import (
-    CreateAppointmentCommand,
-    DeleteAppointmentCommand,
-    UpdateAppointmentCommand,
+from src.api.interfaces.appointment import (
+    CreateAppointmentRequest,
+    DeleteAppointmentRequest,
+    UpdateAppointmentRequest,
 )
 from src.modules.agenda.aplication.dtos.useCase.query import GetByIdQuery, ListQuery
 
@@ -20,9 +20,10 @@ routerAppointment = APIRouter(prefix="/appointments", tags=["Appointments"])
 
 @routerAppointment.post("/", status_code=status.HTTP_201_CREATED)
 async def create_appointment(
-    command: CreateAppointmentCommand,
+    request: CreateAppointmentRequest,
     use_case=Depends(get_create_appointment_use_case),
 ):
+    command = request.to_command()
     result = await use_case.execute(command)
     if not result:
         raise HTTPException(status_code=400, detail="Appointment could not be created")
@@ -52,9 +53,10 @@ async def list_appointments(
 @routerAppointment.put("/{appointment_id}")
 async def update_appointment(
     appointment_id: str,
-    command: UpdateAppointmentCommand,
+    request: UpdateAppointmentRequest,
     use_case=Depends(get_update_appointment_use_case),
 ):
+    command = request.to_command(appointment_id)
     result = await use_case.execute(command)
     if not result:
         raise HTTPException(status_code=404, detail="Appointment not found")
@@ -66,4 +68,4 @@ async def delete_appointment(
     appointment_id: str,
     use_case=Depends(get_delete_appointment_use_case),
 ):
-    await use_case.execute(DeleteAppointmentCommand(id=appointment_id))
+    await use_case.execute(DeleteAppointmentRequest().to_command(appointment_id))

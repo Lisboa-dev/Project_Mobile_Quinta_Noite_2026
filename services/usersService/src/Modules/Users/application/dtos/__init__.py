@@ -1,3 +1,3 @@
-from .output.UserOutputDTO import UserOutputDTO
+from .useCase.output import UseCaseOutputDTO, UserOutputDTO
 
-__all__ = ["UserOutputDTO"]
+__all__ = ["UseCaseOutputDTO", "UserOutputDTO"]

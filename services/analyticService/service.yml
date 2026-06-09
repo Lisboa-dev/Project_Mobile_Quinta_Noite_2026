@@ -10,10 +10,12 @@ services:
     environment:
       ANALYTIC_PORT: ${ANALYTIC_PORT:-8000}
       PROMETHEUS_URL: ${PROMETHEUS_URL:-http://prometheus:9090}
-      ANALYTIC_DATABASE_URL: ${ANALYTIC_DATABASE_URL:-postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-password}@analytic-postgres:5432/${ANALYTIC_POSTGRES_DB:-analyticdb}}
+      ANALYTIC_DATABASE_URL: ${ANALYTIC_DATABASE_URL:-postgresql://postgres:password@analytic-postgres:5432/analyticdb}
       RABBITMQ_URL: ${RABBITMQ_URL:-amqp://guest:guest@rabbitmq:5672/}
       USER_EVENTS_EXCHANGE: ${USER_EVENTS_EXCHANGE:-users.events}
       RABBITMQ_EXCHANGE: ${RABBITMQ_EXCHANGE:-agenda.events}
+      ANALYTIC_EVENTS_QUEUE: ${ANALYTIC_EVENTS_QUEUE:-analytic.events}
+      ANALYTIC_EVENT_ROUTING_KEYS: ${ANALYTIC_EVENT_ROUTING_KEYS:-#}
       ENV: ${ENV:-development}
     labels:
       - "traefik.enable=true"
@@ -28,9 +30,11 @@ services:
       analytic-postgres:
         condition: service_healthy
       rabbitmq:
-        condition: service_started
+        condition: service_healthy
+        required: false
     networks:
       - web
+      - analytic-net
 
   analytic-postgres:
     image: postgres:17
@@ -46,57 +50,12 @@ services:
     volumes:
       - analytic-postgres-data:/var/lib/postgresql/data
     networks:
-      - web
-
-  prometheus:
-    image: prom/prometheus:v2.55.1
-    profiles:
-      - observability
-    command:
-      - --config.file=/etc/prometheus/prometheus.yml
-      - --storage.tsdb.retention.time=15d
-    volumes:
-      - ./observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - prometheus-data:/prometheus
-    ports:
-      - "${PROMETHEUS_PORT:-9090}:9090"
-    networks:
-      - web
-
-  grafana:
-    image: grafana/grafana-oss:11.3.1
-    profiles:
-      - observability
-    environment:
-      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
-      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
-    volumes:
-      - grafana-data:/var/lib/grafana
-    ports:
-      - "${GRAFANA_PORT:-3001}:3000"
-    networks:
-      - web
-
-  otel-collector:
-    image: otel/opentelemetry-collector-contrib:0.114.0
-    profiles:
-      - observability
-    command:
-      - --config=/etc/otelcol-contrib/config.yml
-    volumes:
-      - ./observability/otel-collector.yml:/etc/otelcol-contrib/config.yml:ro
-    ports:
-      - "${OTEL_GRPC_PORT:-4317}:4317"
-      - "${OTEL_HTTP_PORT:-4318}:4318"
-      - "${OTEL_PROM_EXPORTER_PORT:-9464}:9464"
-    networks:
-      - web
+      - analytic-net
 
 networks:
   web:
     name: web
+  analytic-net:
 
 volumes:
   analytic-postgres-data:
-  prometheus-data:
-  grafana-data:

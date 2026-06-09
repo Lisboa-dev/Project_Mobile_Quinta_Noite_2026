@@ -1,63 +1,37 @@
+import asyncio
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Response
-from prometheus_client import CONTENT_TYPE_LATEST, Counter, Gauge, generate_latest
+from fastapi import FastAPI
 
-from src.infra.database import init_db
-from src.infra.messaging import start_consumer_task
-from src.modules.doctorDashboard.api.router import router as doctor_dashboard_router
-from src.modules.operationsCenter.api.router import router as operations_center_router
+from src.api import router
+from src.infra.database import EventLogRepository, init_db
+from src.infra.messaging import RabbitMQConsumer
+from src.observability import setup_observability
+from src.services import EventIngestionService
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
-    start_consumer_task()
-    yield
+    service = EventIngestionService(EventLogRepository())
+    consumer = RabbitMQConsumer()
+    consumer_task = asyncio.create_task(consumer.start(service.ingest))
+
+    app.state.event_ingestion_service = service
+    app.state.rabbitmq_consumer = consumer
+    app.state.rabbitmq_consumer_task = consumer_task
+    try:
+        yield
+    finally:
+        consumer_task.cancel()
+        await consumer.close()
 
 
 app = FastAPI(
     title="Analytic Service",
-    version="1.0.0",
-    description="Dashboards analiticos por contexto de feature.",
+    version="0.1.0",
+    description="Servico de analytics orientado por eventos.",
     lifespan=lifespan,
 )
-
-dashboard_requests = Counter(
-    "analytic_dashboard_requests_total",
-    "Total dashboard requests by analytic context.",
-    ["context"],
-)
-active_business_alerts = Gauge(
-    "analytic_active_business_alerts",
-    "Active business alerts reported by the analytic service.",
-)
-
-app.include_router(doctor_dashboard_router, prefix="/analytics")
-app.include_router(operations_center_router, prefix="/analytics")
-
-
-@app.middleware("http")
-async def count_dashboard_requests(request, call_next):
-    if request.url.path.startswith("/analytics/doctors"):
-        dashboard_requests.labels(context="doctor").inc()
-    if request.url.path.startswith("/analytics/operations"):
-        dashboard_requests.labels(context="operations_center").inc()
-    return await call_next(request)
-
-
-@app.get("/analytics/health", tags=["health"])
-def health_check():
-    return {"status": "ok"}
-
-
-@app.get("/analytics/metrics", tags=["observability"])
-def metrics():
-    active_business_alerts.set(2)
-    return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
-
-
-def main():
-    import uvicorn
-
-    uvicorn.run("src.server:app", host="127.0.0.1", port=8005, reload=True)
+app.include_router(router)
+setup_observability(app, "analytic-service")

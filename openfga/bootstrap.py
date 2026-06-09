@@ -58,13 +58,15 @@ def write_authorization_model(store_id: str) -> None:
 
 def write_tuples(store_id: str) -> None:
     tuples = json.loads(TUPLES_PATH.read_text(encoding="utf-8"))
-    try:
-        request_json("POST", f"/stores/{store_id}/write", tuples)
-    except HTTPError as exc:
-        if exc.code == 400:
-            print("OpenFGA tuples already exist or were partially applied; continuing.")
-            return
-        raise
+    tuple_keys = tuples.get("writes", {}).get("tuple_keys", [])
+    for tuple_key in tuple_keys:
+        try:
+            request_json("POST", f"/stores/{store_id}/write", {"writes": {"tuple_keys": [tuple_key]}})
+        except HTTPError as exc:
+            if exc.code == 400:
+                print(f"OpenFGA tuple already exists; continuing: {tuple_key}")
+                continue
+            raise
     print("OpenFGA initial tuples ready.")
 
 

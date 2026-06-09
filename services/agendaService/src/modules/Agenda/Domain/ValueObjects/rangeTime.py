@@ -78,9 +78,18 @@ class RangeTime:
             self.end_time == end_obj
         )
 
-    def overlaps(self, start_time: str | time, end_time: str | time):
-        start = self._validate_time(start_time)
-        end = self._validate_time(end_time)
+    def overlaps(self, start_time: str | time | 'RangeTime', end_time: str | time | None = None):
+        if isinstance(start_time, RangeTime):
+            start = start_time.start_time
+            end = start_time.end_time
+        else:
+            if end_time is None:
+                raise MissingTimeBoundaryException(
+                    "end_time is required when checking overlap with raw time values",
+                    {"start_time": start_time},
+                )
+            start = self._validate_time(start_time)
+            end = self._validate_time(end_time)
 
         return start < self.end_time and end > self.start_time
            

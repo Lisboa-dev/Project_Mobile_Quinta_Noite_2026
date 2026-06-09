@@ -1,5 +1,6 @@
 from src.modules.agenda.aplication.dtos.exceptions import CreateUseCaseException
 from src.modules.agenda.aplication.dtos.useCase.command.RulesUseCasesDTO import CreateWeekRuleCommand
+from src.modules.agenda.aplication.dtos.useCase.output import UseCaseOutputDTO
 from src.modules.agenda.aplication.events.RuleEvent import CreateWeekRuleEvent
 from src.modules.agenda.aplication.ports.events.BusPort import BusPort
 from src.modules.agenda.aplication.ports.repository import RuleRepositoryPort
@@ -12,7 +13,7 @@ class CreateWeekRuleUseCase:
         self._repository = repository
         self._bus = bus
 
-    async def execute(self, command: CreateWeekRuleCommand) -> bool:
+    async def execute(self, command: CreateWeekRuleCommand) -> UseCaseOutputDTO:
         try:
             rule = WeekRule(
                 ruleEffect=_effect(command.ruleEffect),
@@ -24,8 +25,16 @@ class CreateWeekRuleUseCase:
                 nome=command.nome,
             )
             await self._repository.save(rule)
-            self._bus.emit(CreateWeekRuleEvent(rule))
-            return True
+            event = CreateWeekRuleEvent.from_entity(rule, triggered_by_id=command.triggered_by_id)
+            await self._bus.emit(event)
+            return UseCaseOutputDTO.ok(
+                use_case=self.__class__.__name__,
+                action="created",
+                resource="week_rule",
+                resource_id=str(rule.id),
+                triggered_by_id=command.triggered_by_id,
+                event_name=event.EVENT_NAME,
+            )
         except Exception as e:
             raise CreateUseCaseException(
                 code="CREATE_WEEK_RULE_ERROR",

@@ -47,6 +47,9 @@ class AgendaSettings:
     datadog_trace_agent_port: int = int(os.getenv("DD_TRACE_AGENT_PORT", "8126"))
     client_timeout_seconds: int = int(os.getenv("AGENDA_CLIENT_TIMEOUT_SECONDS", "3"))
     redis_cache_ttl_seconds: int = int(os.getenv("AGENDA_REDIS_CACHE_TTL_SECONDS", "300"))
+    event_broker_buffer_max_size: int = int(os.getenv("AGENDA_EVENT_BROKER_BUFFER_MAX_SIZE", "1000"))
+    event_broker_retry_interval_seconds: float = float(os.getenv("AGENDA_EVENT_BROKER_RETRY_INTERVAL_SECONDS", "5"))
+    event_broker_retry_batch_size: int = int(os.getenv("AGENDA_EVENT_BROKER_RETRY_BATCH_SIZE", "50"))
 
 
 settings = AgendaSettings()

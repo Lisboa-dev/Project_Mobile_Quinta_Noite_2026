@@ -1,21 +1,26 @@
-from typing import Protocol
+from typing import Protocol, TypeVar
 
 
-class IUseCasesCreateUser(Protocol):
-    def execute(self, data): ...
+CommandT = TypeVar("CommandT")
+QueryT = TypeVar("QueryT")
+OutputT = TypeVar("OutputT")
 
 
-class IUseCasesListUser(Protocol):
-    def execute(self): ...
+class IUseCasesCreateUser(Protocol[CommandT, OutputT]):
+    async def execute(self, data: CommandT) -> OutputT: ...
 
 
-class IUseCasesDeleteUser(Protocol):
-    def execute(self, user_id: int): ...
+class IUseCasesListUser(Protocol[QueryT, OutputT]):
+    async def execute(self, query: QueryT | None = None) -> list[OutputT]: ...
 
 
-class IUseCasesUpdateUser(Protocol):
-    def execute(self, data): ...
+class IUseCasesDeleteUser(Protocol[CommandT, OutputT]):
+    async def execute(self, command: CommandT) -> OutputT: ...
 
 
-class IUseCasesDetailUser(Protocol):
-    def execute(self, user_id: int): ...
+class IUseCasesUpdateUser(Protocol[CommandT, OutputT]):
+    async def execute(self, data: CommandT) -> OutputT: ...
+
+
+class IUseCasesDetailUser(Protocol[QueryT, OutputT]):
+    async def execute(self, query: QueryT) -> OutputT: ...

@@ -32,8 +32,6 @@ services:
     depends_on:
       auth-postgres:
         condition: service_healthy
-      openfga-init:
-        condition: service_completed_successfully
     networks:
       - web
       - auth-net

@@ -1,12 +1,12 @@
 
 from src.infra.adapter.repository.base import SQLiteRepository
+from src.infra.mapper.DomainMapper import AppointmentMapper
 from src.modules.agenda.aplication.ports.repository.AppointmentRepositoryPort import AppointmentRepositoryPort
 
 
 class AppointmentRepository(SQLiteRepository, AppointmentRepositoryPort):
     async def save(self, appointment, scheduler_id: str | None = None) -> None:
         appointment_id = self._entity_id(appointment)
-        data = self._load(self._dump(appointment))
         with self._db.connect() as connection:
             connection.execute(
                 """
@@ -27,11 +27,11 @@ class AppointmentRepository(SQLiteRepository, AppointmentRepositoryPort):
                 (
                     appointment_id,
                     scheduler_id,
-                    str(data.get("patient_id") or data.get("patient") or ""),
-                    str(data.get("doctor_id") or data.get("doctor") or ""),
-                    str(data.get("room_id") or data.get("room") or ""),
-                    data.get("date_id"),
-                    str(data.get("status") or "AVAILABLE"),
+                    str(appointment.patient_id),
+                    str(appointment.doctor_id),
+                    str(appointment.room_id),
+                    appointment.date,
+                    str(getattr(appointment.status, "value", appointment.status)),
                     self._dump(appointment),
                 ),
             )
@@ -45,7 +45,7 @@ class AppointmentRepository(SQLiteRepository, AppointmentRepositoryPort):
         await self._invalidate_entity("appointments", appointment_id)
 
     async def get(self, appointment_id: str):
-        return await self._fetch_json_cached("appointments", appointment_id)
+        return AppointmentMapper.toDomain(await self._fetch_json_cached("appointments", appointment_id))
 
     async def getAppointment(self, id: str):
         return await self.get(id)

@@ -26,19 +26,19 @@ class Day:
         self._id = date
         self._rules = rules or []
         self._events: list[object] = []
-        self.appointmentList_id: list[int] = []
+        self._appointmentList_id: list[int] = []
        
         
     def update(self, rooms: list[Room] | dict):
         if isinstance(rooms, dict):
-            self._availability = bool(rooms.get("availability", self._availability))
-            self._status = rooms.get("status", self._status)
+            self.availability = bool(rooms.get("availability", self._availability))
+            self.status = rooms.get("status", self._status)
             return self
-        self._rooms = rooms
+        self.rooms = rooms
         return self
  
     def updateState(self, newStatus: DayStatus):
-        self._status = newStatus
+        self.status = newStatus
         self.addEvent("objeto de evento")
         
     def createExceptions(self, exceptions: list[RangeTime]):
@@ -46,11 +46,11 @@ class Day:
         self.addEvent("objeto de evento")
         
     def addAppointment(self, appointment_id: int):
-        self.appointmentList_id.append(appointment_id)
+        self.appointment_list_id.append(appointment_id)
         self.addEvent("objeto de evento")
     
     def removeAppointment(self, appointment_id: int):
-        self.appointmentList_id.remove(appointment_id)
+        self.appointment_list_id.remove(appointment_id)
         self.addEvent("objeto de evento")
     
 
@@ -120,7 +120,7 @@ class Day:
     
     
     def addRules(self, rules: list[BaseRule]):
-        self._rules.extend(rules)
+        self.rules.extend(rules)
 
     def addEvent(self, event):
         self._events.append(event)
@@ -129,25 +129,82 @@ class Day:
     def rooms(self) -> list[Room]:
         return self._rooms
 
+    @rooms.setter
+    def rooms(self, value: list[Room] | None) -> None:
+        self._rooms = value or []
+
+    @property
+    def id(self) -> Date:
+        return self._id
+
+    @id.setter
+    def id(self, value: Date) -> None:
+        self._id = value
+
     @property
     def date(self) -> Date:
         return self._date
+
+    @date.setter
+    def date(self, value: Date) -> None:
+        self._date = value
+        self._id = value
 
     @property
     def weekday(self) -> int:
         return self._weekday
 
+    @weekday.setter
+    def weekday(self, value: int) -> None:
+        self._weekday = value
+
     @property
     def availability(self) -> bool:
         return self._availability
+
+    @availability.setter
+    def availability(self, value: bool) -> None:
+        self._availability = bool(value)
 
     @property
     def status(self) -> DayStatus:
         return self._status
 
+    @status.setter
+    def status(self, value: DayStatus) -> None:
+        self._status = value
+
     @property
     def rules(self) -> list[BaseRule]:
         return self._rules
+
+    @rules.setter
+    def rules(self, value: list[BaseRule] | None) -> None:
+        self._rules = value or []
+
+    @property
+    def events(self) -> list[object]:
+        return self._events
+
+    @events.setter
+    def events(self, value: list[object] | None) -> None:
+        self._events = value or []
+
+    @property
+    def appointment_list_id(self) -> list[int]:
+        return self._appointmentList_id
+
+    @appointment_list_id.setter
+    def appointment_list_id(self, value: list[int] | None) -> None:
+        self._appointmentList_id = value or []
+
+    @property
+    def appointmentList_id(self) -> list[int]:
+        return self._appointmentList_id
+
+    @appointmentList_id.setter
+    def appointmentList_id(self, value: list[int] | None) -> None:
+        self._appointmentList_id = value or []
         
     
     

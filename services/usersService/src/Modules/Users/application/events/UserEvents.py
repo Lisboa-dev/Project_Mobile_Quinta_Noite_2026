@@ -1,31 +1,39 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
+
+
+def _now() -> datetime:
+    return datetime.now(timezone.utc)
 
 
 @dataclass(frozen=True)
 class UserEvent:
-    user_id: int | None
-    userName: str
-    cargo: str | None
-    occurred_at: datetime
-
-    @classmethod
-    def from_user(cls, user):
-        return cls(
-            user_id=user.id,
-            userName=user.userName.value,
-            cargo=user.cargo.valor,
-            occurred_at=datetime.now(timezone.utc),
-        )
+    id: str
+    userName: str | None = None
+    name: str | None = None
+    email: str | None = None
+    cargo: str | None = None
+    triggered_by_id: str | None = None
+    occurred_at: datetime = field(default_factory=_now)
 
 
+@dataclass(frozen=True)
 class UserCreatedEvent(UserEvent):
     pass
 
 
+@dataclass(frozen=True)
 class UserUpdatedEvent(UserEvent):
-    pass
+    changed_fields: tuple[str, ...] = ()
 
 
+@dataclass(frozen=True)
 class UserDeletedEvent(UserEvent):
     pass
+
+
+@dataclass(frozen=True)
+class UserProfileImageAddedEvent(UserEvent):
+    profile_image_url: str | None = None
+    profile_image_object: str | None = None
+    previous_profile_image_object: str | None = None

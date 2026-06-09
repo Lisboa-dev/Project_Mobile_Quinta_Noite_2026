@@ -60,6 +60,7 @@ class RabbitMQClient:
             await self.connect()
             return ClientHealth("rabbitmq", True, metadata={"exchange": self._exchange_name})
         except Exception as exc:
+            await self.close()
             return ClientHealth("rabbitmq", False, str(exc))
 
     async def close(self) -> None:

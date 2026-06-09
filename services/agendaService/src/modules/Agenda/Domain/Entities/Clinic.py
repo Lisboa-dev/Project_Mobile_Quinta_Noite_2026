@@ -23,9 +23,9 @@ class Clinic:
 
     def update(self, name: str | None = None, rules: list[BaseRule] | None = None):
         if name is not None:
-            self._name = name
+            self.name = name
         if rules is not None:
-            self._rules = rules
+            self.rules = rules
         return self
 
     def addRule(self, rule: BaseRule):
@@ -38,10 +38,22 @@ class Clinic:
     def id(self) -> ID:
         return self._id
 
+    @id.setter
+    def id(self, value: ID | str) -> None:
+        self._id = value if isinstance(value, ID) else ID(value)
+
     @property
     def rules(self) -> list[BaseRule]:
         return self._rules
 
+    @rules.setter
+    def rules(self, value: list[BaseRule] | None) -> None:
+        self._rules = value or []
+
     @property
     def name(self) -> str:
         return self._name
+
+    @name.setter
+    def name(self, value: str) -> None:
+        self._name = value

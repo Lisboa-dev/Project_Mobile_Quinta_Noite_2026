@@ -1,48 +1,43 @@
-from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, Protocol
 
 from src.modules.agenda.aplication.dtos.useCase.query import ListDaysQuery, ListQuery
 
 
-class EntityQueryRepositoryPort(ABC):
-    @abstractmethod
-    async def get_by_id(self, entity_id: str) -> Any:
-        pass
+class EntityQueryRepositoryPort(Protocol):
+    async def get_by_id(self, entity_id: str) -> dict[str, Any] | None:
+        ...
 
-    @abstractmethod
-    async def list(self, query: ListQuery) -> list[Any]:
-        pass
+    async def list(self, query: ListQuery) -> list[dict[str, Any]]:
+        ...
 
 
-class AppointmentQueryRepositoryPort(EntityQueryRepositoryPort):
+class AppointmentQueryRepositoryPort(EntityQueryRepositoryPort, Protocol):
     pass
 
 
-class ClinicQueryRepositoryPort(EntityQueryRepositoryPort):
+class ClinicQueryRepositoryPort(EntityQueryRepositoryPort, Protocol):
     pass
 
 
-class DoctorQueryRepositoryPort(EntityQueryRepositoryPort):
+class DoctorQueryRepositoryPort(EntityQueryRepositoryPort, Protocol):
     pass
 
 
-class PatientQueryRepositoryPort(EntityQueryRepositoryPort):
+class PatientQueryRepositoryPort(EntityQueryRepositoryPort, Protocol):
     pass
 
 
-class RoomQueryRepositoryPort(EntityQueryRepositoryPort):
+class RoomQueryRepositoryPort(EntityQueryRepositoryPort, Protocol):
     pass
 
 
-class RuleQueryRepositoryPort(EntityQueryRepositoryPort):
+class RuleQueryRepositoryPort(EntityQueryRepositoryPort, Protocol):
     pass
 
 
-class CalendarQueryRepositoryPort(ABC):
-    @abstractmethod
-    async def get_by_id(self, day_id: str) -> Any:
-        pass
+class CalendarQueryRepositoryPort(Protocol):
+    async def get_by_id(self, day_id: str) -> dict[str, Any] | None:
+        ...
 
-    @abstractmethod
-    async def list(self, query: ListDaysQuery) -> list[Any]:
-        pass
+    async def list(self, query: ListDaysQuery) -> list[dict[str, Any]]:
+        ...

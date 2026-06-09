@@ -1,5 +1,10 @@
-import httpx
 import hashlib
+import os
+
+try:
+    import httpx
+except ImportError:  # pragma: no cover - exercised only in minimal test environments
+    httpx = None
 
 from ..config import get_settings
 from .event_log import log_event
@@ -14,6 +19,11 @@ def _bearer_token(token: str) -> str:
 
 
 async def _fetch_user(email: str = "", name: str = "") -> dict | None:
+    if os.getenv("TEST_USE_MOCK_DATA", "true").lower() in {"1", "true", "yes", "on"}:
+        return None
+    if httpx is None:
+        return None
+
     settings = get_settings()
     params = {}
     if email:

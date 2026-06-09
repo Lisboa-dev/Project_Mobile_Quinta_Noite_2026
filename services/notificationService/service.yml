@@ -9,9 +9,11 @@ services:
         required: false
     environment:
       RABBITMQ_URL: ${RABBITMQ_URL:-amqp://guest:guest@rabbitmq:5672/}
-      NOTIFICATION_DATABASE_URL: ${NOTIFICATION_DATABASE_URL:-postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-password}@notification-postgres:5432/${NOTIFICATION_POSTGRES_DB:-notificationdb}}
+      NOTIFICATION_DATABASE_URL: ${NOTIFICATION_DATABASE_URL:-postgresql://postgres:password@notification-postgres:5432/notificationdb}
       USER_EVENTS_EXCHANGE: ${USER_EVENTS_EXCHANGE:-users.events}
       RABBITMQ_EXCHANGE: ${RABBITMQ_EXCHANGE:-agenda.events}
+      NOTIFICATION_EVENTS_QUEUE: ${NOTIFICATION_EVENTS_QUEUE:-notification.events}
+      NOTIFICATION_EVENT_ROUTING_KEYS: ${NOTIFICATION_EVENT_ROUTING_KEYS:-#}
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.notificacao-service.rule=PathPrefix(`/notification`)"
@@ -26,9 +28,11 @@ services:
       notification-postgres:
         condition: service_healthy
       rabbitmq:
-        condition: service_started
+        condition: service_healthy
+        required: false
     networks:
       - web
+      - notification-net
 
   notification-postgres:
     image: postgres:17
@@ -44,11 +48,12 @@ services:
     volumes:
       - notification-postgres-data:/var/lib/postgresql/data
     networks:
-      - web
+      - notification-net
 
 networks:
   web:
     name: web
+  notification-net:
 
 volumes:
   notification-postgres-data:

@@ -1,6 +1,22 @@
+import os
+
 import pytest
-import psycopg2
-from testcontainers.postgres import PostgresContainer
+
+pytestmark = pytest.mark.integration
+
+REAL_SERVICES = os.getenv("TEST_USE_REAL_SERVICES", "false").lower() in {
+    "1",
+    "true",
+    "yes",
+    "on",
+}
+
+if REAL_SERVICES:
+    psycopg2 = pytest.importorskip("psycopg2")
+    PostgresContainer = pytest.importorskip("testcontainers.postgres").PostgresContainer
+else:
+    psycopg2 = None
+    PostgresContainer = None
 
 
 # =========================
@@ -52,6 +68,9 @@ def postgres_url():
     """
     Sobe um container PostgreSQL para toda a sessão de testes.
     """
+    if not REAL_SERVICES:
+        pytest.skip("Set TEST_USE_REAL_SERVICES=true to run PostgreSQL container tests.")
+
     with PostgresContainer("postgres:15") as postgres:
         yield postgres.get_connection_url()
 

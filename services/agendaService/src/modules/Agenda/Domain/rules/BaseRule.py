@@ -45,6 +45,10 @@ class BaseRule(ABC):
     @property
     def rangeTime(self) -> RangeTime | None:
         return self._rangeTime
+
+    @rangeTime.setter
+    def rangeTime(self, value: RangeTime | None) -> None:
+        self._rangeTime = value
     
     @property
     def description(self) -> str | None:

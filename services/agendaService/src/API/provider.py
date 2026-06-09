@@ -1,19 +1,19 @@
 from functools import lru_cache
 from typing import cast
 
-from src.infra import (
+from src.infra.adapter.repository import (
     AgendaRepository,
     AppointmentRepository,
     AppointmentSchedulingRepository,
-    CalendarDataClient,
     CalendarRepository,
     ClinicRepository,
     DoctorRepository,
-    InMemoryEventBus,
     PatientRepository,
     RoomRepository,
     RuleRepository,
 )
+from src.infra.adapter.ExternServices import CalendarDataClient
+from src.infra.adapter.Messaging import InMemoryEventBus
 from src.infra.adapter.Messaging.websocket.container import connection_manager
 from src.infra.adapter.Messaging.rabbitMQ.userServiceConsumers import UserServiceCreatedEventsConsumer
 from src.infra.adapter.repository.querys import (
@@ -488,7 +488,7 @@ def get_connection_manager():
 
 
 def get_infra_health_handler() -> InfraHealthHandler:
-    return InfraHealthHandler()
+    return InfraHealthHandler(get_event_bus())
 
 
 def get_user_service_doctor_created_handler() -> UserServiceDoctorCreatedHandler:

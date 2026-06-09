@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from src.modules.agenda.aplication.dtos.exceptions import CreateUseCaseException
+from src.modules.agenda.aplication.dtos.useCase.output import UseCaseOutputDTO
 from src.modules.agenda.aplication.ports.events.BusPort import BusPort
 from src.modules.agenda.aplication.events.CalendarEvent import CreateCalendarEvent
 from src.modules.agenda.aplication.ports.externServices.CalendarDataPort import CalendarDataPort
@@ -12,6 +13,7 @@ from src.modules.agenda.domain.entities import Day
 class CreateCalendarCommand:
     day: int
     ano: int
+    triggered_by_id: str | None = None
 
 
 class CreateCalendarUseCase:
@@ -30,7 +32,7 @@ class CreateCalendarUseCase:
         self._bus = bus
 
 
-    async def execute(self, command: CreateCalendarCommand):
+    async def execute(self, command: CreateCalendarCommand) -> UseCaseOutputDTO:
         try:
             data = await self._baseData.mont(command.day, command.ano)
             rules = await self._repositoryRule.getDayRules()
@@ -46,16 +48,39 @@ class CreateCalendarUseCase:
                         await self._repositoryCalendar.save(day)
                         days.append(day)
                     except:
-                        await self._repositoryCalendar.delete(d['ano'])
+                        await self._repositoryCalendar.delete(command.ano)
                         raise CreateUseCaseException(
                             code="CREATE_CALENDAR_DAY_ERROR",
                             message="Error creating calendar day",
                             use_case=self.__class__.__name__,
                             context={"day": str(d)},
                         )
-                self._bus.emit(CreateCalendarEvent(days=days, year=str(command.ano)))
-                return days
+                event = CreateCalendarEvent.from_days(
+                    days=days,
+                    year=str(command.ano),
+                    triggered_by_id=command.triggered_by_id,
+                )
+                await self._bus.emit(event)
+                return UseCaseOutputDTO.ok(
+                    use_case=self.__class__.__name__,
+                    action="created",
+                    resource="calendar",
+                    resource_id=str(command.ano),
+                    triggered_by_id=command.triggered_by_id,
+                    event_name=event.EVENT_NAME,
+                    data={"days_count": len(days), "day_ids": [str(day.date) for day in days]},
+                )
+            return UseCaseOutputDTO.fail(
+                use_case=self.__class__.__name__,
+                action="create",
+                resource="calendar",
+                resource_id=str(command.ano),
+                triggered_by_id=command.triggered_by_id,
+                message="Calendar source data was not available",
+            )
             
+        except CreateUseCaseException:
+            raise
         except Exception as e:
             await self._repositoryCalendar.delete(command.ano)
             raise CreateUseCaseException(

@@ -3,16 +3,16 @@ import json
 from contextlib import asynccontextmanager
 
 import uvicorn
-from starlette.applications import Starlette
+from fastapi import FastAPI
 from starlette.requests import Request
 from starlette.responses import Response
-from starlette.routing import Route
 
 from .config import get_settings
 from .services.authorization import authorization_service
 from .services.event_log import init_db
 from .services.login import validateLoginService
 from .services.login import loginService
+from .observability import setup_observability
 from .services.tokenJwt import TokenService
 
 
@@ -86,14 +86,16 @@ async def lifespan(_app):
     yield
 
 
-app = Starlette(
-    routes=[
-        Route("/health", endpoint=health, methods=["GET"]),
-        Route("/auth/validate", endpoint=forward_auth, methods=["GET"]),
-        Route("/auth/login", endpoint=login, methods=["POST"]),
-    ],
+app = FastAPI(
+    title="Auth Service",
+    version="0.1.0",
+    description="Servico de autenticacao e autorizacao.",
     lifespan=lifespan,
 )
+app.add_api_route("/health", endpoint=health, methods=["GET"])
+app.add_api_route("/auth/validate", endpoint=forward_auth, methods=["GET"])
+app.add_api_route("/auth/login", endpoint=login, methods=["POST"])
+setup_observability(app, get_settings().APP_NAME)
 
 
 def start():
