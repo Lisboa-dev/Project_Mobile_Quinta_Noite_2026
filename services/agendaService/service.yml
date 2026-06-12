@@ -1,0 +1,97 @@
+services:
+  agenda-service:
+    build:
+      context: .
+    env_file:
+      - path: ../../.env
+        required: false
+      - path: ./.env
+        required: false
+    environment:
+      AGENDA_DATABASE_URL: ${AGENDA_DATABASE_URL:-postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-password}@agenda-postgres:5432/${AGENDA_POSTGRES_DB:-agendadb}}
+      RABBITMQ_URL: ${RABBITMQ_URL:-amqp://guest:guest@rabbitmq:5672/}
+      RABBITMQ_EXCHANGE: ${RABBITMQ_EXCHANGE:-agenda.events}
+      USER_EVENTS_EXCHANGE: ${USER_EVENTS_EXCHANGE:-users.events}
+      AGENDA_USER_EVENTS_QUEUE: ${AGENDA_USER_EVENTS_QUEUE:-agenda.user-events}
+      USER_DOCTOR_CREATED_ROUTING_KEY: ${USER_DOCTOR_CREATED_ROUTING_KEY:-users.doctor.created}
+      USER_PATIENT_CREATED_ROUTING_KEY: ${USER_PATIENT_CREATED_ROUTING_KEY:-users.patient.created}
+      USER_DOCTOR_DELETED_ROUTING_KEY: ${USER_DOCTOR_DELETED_ROUTING_KEY:-users.doctor.deleted}
+      USER_PATIENT_DELETED_ROUTING_KEY: ${USER_PATIENT_DELETED_ROUTING_KEY:-users.patient.deleted}
+      AGENDA_REDIS_URL: ${AGENDA_REDIS_URL:-redis://agenda-redis:6379/0}
+      AGENDA_CLIENT_TIMEOUT_SECONDS: ${AGENDA_CLIENT_TIMEOUT_SECONDS:-3}
+      AGENDA_EVENT_BROKER_BUFFER_MAX_SIZE: ${AGENDA_EVENT_BROKER_BUFFER_MAX_SIZE:-1000}
+      AGENDA_EVENT_BROKER_RETRY_INTERVAL_SECONDS: ${AGENDA_EVENT_BROKER_RETRY_INTERVAL_SECONDS:-5}
+      AGENDA_EVENT_BROKER_RETRY_BATCH_SIZE: ${AGENDA_EVENT_BROKER_RETRY_BATCH_SIZE:-50}
+      PROMETHEUS_URL: ${PROMETHEUS_URL:-http://prometheus:9090}
+      DD_SERVICE: ${DD_SERVICE:-agenda-service}
+      DD_ENV: ${DD_ENV:-development}
+      DD_VERSION: ${DD_VERSION:-0.1.0}
+      DD_AGENT_HOST: ${DD_AGENT_HOST:-datadog}
+      DD_TRACE_AGENT_PORT: ${DD_TRACE_AGENT_PORT:-8126}
+      DD_TRACE_ENABLED: ${DD_TRACE_ENABLED:-false}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.agenda-service.rule=PathPrefix(`/agenda`)"
+      - "traefik.http.routers.agenda-service.entrypoints=web"
+      - "traefik.http.routers.agenda-service.middlewares=auth@file"
+      - "traefik.http.services.agenda-service.loadbalancer.server.port=8000"
+      - "traefik.docker.network=internal"
+    ports:
+      - "${AGENDA_PORT:-8001}:8000"
+    depends_on:
+      agenda-postgres:
+        condition: service_healthy
+      agenda-redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"from urllib.request import urlopen; urlopen('http://127.0.0.1:8000/agenda/infra/health', timeout=3).read()\""]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - internal
+      - agenda-net
+
+  agenda-postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${AGENDA_POSTGRES_DB:-agendadb}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-postgres}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    volumes:
+      - agenda-postgres-data:/var/lib/postgresql/data
+    networks:
+      - agenda-net
+
+  agenda-redis:
+    image: redis:7
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "${AGENDA_REDIS_PORT:-6381}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+    volumes:
+      - agenda-redis-data:/data
+    networks:
+      - agenda-net
+
+networks:
+
+  agenda-net:
+
+volumes:
+  agenda-postgres-data:
+  agenda-redis-data:

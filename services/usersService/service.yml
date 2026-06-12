@@ -1,0 +1,105 @@
+services:
+  users-service:
+    build:
+      context: .
+    env_file:
+      - path: ../../.env
+        required: false
+      - path: ./.env
+        required: false
+    environment:
+      USERS_DATABASE_URL: ${USERS_DATABASE_URL:-postgresql+psycopg2://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-password}@users-postgres:5432/${USERS_POSTGRES_DB:-usersdb}}
+      RABBITMQ_URL: ${RABBITMQ_URL:-amqp://guest:guest@rabbitmq:5672/}
+      USER_EVENTS_EXCHANGE: ${USER_EVENTS_EXCHANGE:-users.events}
+      REDIS_URL: ${REDIS_URL:-redis://users-redis:6379/0}
+      USERS_REDIS_EVENTS_CHANNEL: ${USERS_REDIS_EVENTS_CHANNEL:-users.events}
+      PROMETHEUS_URL: ${PROMETHEUS_URL:-http://prometheus:9090}
+      USERS_CLIENT_TIMEOUT_SECONDS: ${USERS_CLIENT_TIMEOUT_SECONDS:-3}
+      MINIO_ENDPOINT_URL: ${MINIO_ENDPOINT_URL:-http://minio:9000}
+      MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL:-http://localhost:9000}
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-admin}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-altere-esta-senha-forte}
+      MINIO_BUCKET_NAME: ${MINIO_BUCKET_NAME:-user-profile-images}
+      MINIO_SECURE: ${MINIO_SECURE:-false}
+      PROFILE_IMAGE_MAX_BYTES: ${PROFILE_IMAGE_MAX_BYTES:-5242880}
+      PROFILE_IMAGE_ALLOWED_TYPES: ${PROFILE_IMAGE_ALLOWED_TYPES:-image/jpeg,image/png,image/p}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.users-public-register.rule=Path(`/users/pacients/`) && Method(`POST`)"
+      - "traefik.http.routers.users-public-register.entrypoints=web"
+      - "traefik.http.routers.users-public-register.middlewares=users-strip"
+      - "traefik.http.routers.users-public-register.priority=100"
+      - "traefik.http.routers.users-public-register.service=users-service"
+
+      - "traefik.http.routers.users-service.rule=PathPrefix(`/users`)"
+      - "traefik.http.routers.users-service.entrypoints=web"
+      - "traefik.http.routers.users-service.middlewares=auth@file,users-strip"
+      - "traefik.http.routers.users-service.priority=1"
+      - "traefik.http.middlewares.users-strip.stripprefix.prefixes=/users"
+      - "traefik.http.services.users-service.loadbalancer.server.port=8000"
+      - "traefik.docker.network=internal"
+    ports:
+      - "${USERS_PORT:-8002}:8000"
+    depends_on:
+      users-postgres:
+        condition: service_healthy
+      users-redis:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+        required: false
+      minio:
+        condition: service_started
+    networks:
+      - internal
+      - users-net
+
+  users-redis:
+    image: redis:7
+    networks:
+      - users-net
+
+  users-postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${USERS_POSTGRES_DB:-usersdb}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-postgres}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - users-postgres-data:/var/lib/postgresql/data
+    networks:
+      - users-net
+
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    restart: unless-stopped
+
+    command: server /data --console-address ":9001"
+
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-admin}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-altere-esta-senha-forte}
+
+    ports:
+      - "9000:9000" # API S3
+      - "9001:9001" # Painel administrativo
+
+    volumes:
+      - minio_data:/data
+    networks:
+      - users-net
+   
+
+networks:
+
+  users-net:
+
+volumes:
+  users-postgres-data:
+  minio_data:

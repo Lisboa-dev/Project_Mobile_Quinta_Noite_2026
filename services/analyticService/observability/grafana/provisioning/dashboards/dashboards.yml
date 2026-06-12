@@ -1,0 +1,11 @@
+apiVersion: 1
+
+providers:
+  - name: Agendamento Medico
+    orgId: 1
+    folder: Agendamento Medico
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /var/lib/grafana/dashboards

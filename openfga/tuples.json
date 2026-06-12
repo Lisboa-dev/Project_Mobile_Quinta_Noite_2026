@@ -1,0 +1,371 @@
+{
+  "writes": {
+    "tuple_keys": [
+      {
+        "user": "role:admin#member",
+        "relation": "admin",
+        "object": "service:users"
+      },
+      {
+        "user": "role:admin#member",
+        "relation": "admin",
+        "object": "service:agenda"
+      },
+      {
+        "user": "role:admin#member",
+        "relation": "admin",
+        "object": "service:notification"
+      },
+      {
+        "user": "role:admin#member",
+        "relation": "admin",
+        "object": "service:analytics"
+      },
+      {
+        "user": "role:atendent#member",
+        "relation": "writer",
+        "object": "service:users"
+      },
+      {
+        "user": "role:attendant#member",
+        "relation": "writer",
+        "object": "service:users"
+      },
+      {
+        "user": "role:atendent#member",
+        "relation": "writer",
+        "object": "service:agenda"
+      },
+      {
+        "user": "role:attendant#member",
+        "relation": "writer",
+        "object": "service:agenda"
+      },
+      {
+        "user": "role:atendent#member",
+        "relation": "writer",
+        "object": "service:notification"
+      },
+      {
+        "user": "role:attendant#member",
+        "relation": "writer",
+        "object": "service:notification"
+      },
+      {
+        "user": "role:medic#member",
+        "relation": "writer",
+        "object": "service:agenda"
+      },
+      {
+        "user": "role:doctor#member",
+        "relation": "writer",
+        "object": "service:agenda"
+      },
+      {
+        "user": "role:medic#member",
+        "relation": "reader",
+        "object": "service:analytics"
+      },
+      {
+        "user": "role:doctor#member",
+        "relation": "reader",
+        "object": "service:analytics"
+      },
+      {
+        "user": "role:medic#member",
+        "relation": "writer",
+        "object": "service:notification"
+      },
+      {
+        "user": "role:doctor#member",
+        "relation": "writer",
+        "object": "service:notification"
+      },
+      {
+        "user": "role:pacient#member",
+        "relation": "writer",
+        "object": "service:agenda"
+      },
+      {
+        "user": "role:patient#member",
+        "relation": "writer",
+        "object": "service:agenda"
+      },
+      {
+        "user": "role:pacient#member",
+        "relation": "writer",
+        "object": "service:notification"
+      },
+      {
+        "user": "role:patient#member",
+        "relation": "writer",
+        "object": "service:notification"
+      },
+      {
+        "user": "role:user#member",
+        "relation": "reader",
+        "object": "service:agenda"
+      },
+      {
+        "user": "role:user#member",
+        "relation": "reader",
+        "object": "service:notification"
+      },
+      {
+        "user": "role:admin#member",
+        "relation": "assignee",
+        "object": "route_permission:users.admins.manage"
+      },
+      {
+        "user": "role:admin#member",
+        "relation": "assignee",
+        "object": "route_permission:users.admins.read"
+      },
+      {
+        "user": "role:admin#member",
+        "relation": "assignee",
+        "object": "route_permission:users.medics.read"
+      },
+      {
+        "user": "role:atendent#member",
+        "relation": "assignee",
+        "object": "route_permission:users.medics.read"
+      },
+      {
+        "user": "role:attendant#member",
+        "relation": "assignee",
+        "object": "route_permission:users.medics.read"
+      },
+      {
+        "user": "role:medic#member",
+        "relation": "assignee",
+        "object": "route_permission:users.medics.read"
+      },
+      {
+        "user": "role:doctor#member",
+        "relation": "assignee",
+        "object": "route_permission:users.medics.read"
+      },
+      {
+        "user": "role:pacient#member",
+        "relation": "assignee",
+        "object": "route_permission:users.medics.read"
+      },
+      {
+        "user": "role:patient#member",
+        "relation": "assignee",
+        "object": "route_permission:users.medics.read"
+      },
+      {
+        "user": "role:admin#member",
+        "relation": "assignee",
+        "object": "route_permission:users.pacients.read"
+      },
+      {
+        "user": "role:atendent#member",
+        "relation": "assignee",
+        "object": "route_permission:users.pacients.read"
+      },
+      {
+        "user": "role:attendant#member",
+        "relation": "assignee",
+        "object": "route_permission:users.pacients.read"
+      },
+      {
+        "user": "role:medic#member",
+        "relation": "assignee",
+        "object": "route_permission:users.pacients.read"
+      },
+      {
+        "user": "role:doctor#member",
+        "relation": "assignee",
+        "object": "route_permission:users.pacients.read"
+      },
+      {
+        "user": "role:pacient#member",
+        "relation": "assignee",
+        "object": "route_permission:users.pacients.read"
+      },
+      {
+        "user": "role:patient#member",
+        "relation": "assignee",
+        "object": "route_permission:users.pacients.read"
+      },
+      {
+        "user": "role:admin#member",
+        "relation": "assignee",
+        "object": "route_permission:users.self.read"
+      },
+      {
+        "user": "role:atendent#member",
+        "relation": "assignee",
+        "object": "route_permission:users.self.read"
+      },
+      {
+        "user": "role:attendant#member",
+        "relation": "assignee",
+        "object": "route_permission:users.self.read"
+      },
+      {
+        "user": "role:medic#member",
+        "relation": "assignee",
+        "object": "route_permission:users.self.read"
+      },
+      {
+        "user": "role:doctor#member",
+        "relation": "assignee",
+        "object": "route_permission:users.self.read"
+      },
+      {
+        "user": "role:pacient#member",
+        "relation": "assignee",
+        "object": "route_permission:users.self.read"
+      },
+      {
+        "user": "role:patient#member",
+        "relation": "assignee",
+        "object": "route_permission:users.self.read"
+      },
+      {
+        "user": "role:admin#member",
+        "relation": "assignee",
+        "object": "route_permission:users.doctors.create"
+      },
+      {
+        "user": "role:atendent#member",
+        "relation": "assignee",
+        "object": "route_permission:users.doctors.create"
+      },
+      {
+        "user": "role:attendant#member",
+        "relation": "assignee",
+        "object": "route_permission:users.doctors.create"
+      },
+      {
+        "user": "role:admin#member",
+        "relation": "assignee",
+        "object": "route_permission:users.users.manage"
+      },
+      {
+        "user": "role:atendent#member",
+        "relation": "assignee",
+        "object": "route_permission:users.users.manage"
+      },
+      {
+        "user": "role:attendant#member",
+        "relation": "assignee",
+        "object": "route_permission:users.users.manage"
+      },
+      {
+        "user": "role:admin#member",
+        "relation": "assignee",
+        "object": "route_permission:agenda.appointments.manage"
+      },
+      {
+        "user": "role:atendent#member",
+        "relation": "assignee",
+        "object": "route_permission:agenda.appointments.manage"
+      },
+      {
+        "user": "role:attendant#member",
+        "relation": "assignee",
+        "object": "route_permission:agenda.appointments.manage"
+      },
+      {
+        "user": "role:medic#member",
+        "relation": "assignee",
+        "object": "route_permission:agenda.appointments.manage"
+      },
+      {
+        "user": "role:doctor#member",
+        "relation": "assignee",
+        "object": "route_permission:agenda.appointments.manage"
+      },
+      {
+        "user": "role:pacient#member",
+        "relation": "assignee",
+        "object": "route_permission:agenda.appointments.create"
+      },
+      {
+        "user": "role:patient#member",
+        "relation": "assignee",
+        "object": "route_permission:agenda.appointments.create"
+      },
+      {
+        "user": "role:admin#member",
+        "relation": "assignee",
+        "object": "route_permission:agenda.resources.manage"
+      },
+      {
+        "user": "role:atendent#member",
+        "relation": "assignee",
+        "object": "route_permission:agenda.resources.manage"
+      },
+      {
+        "user": "role:attendant#member",
+        "relation": "assignee",
+        "object": "route_permission:agenda.resources.manage"
+      },
+      {
+        "user": "role:admin#member",
+        "relation": "assignee",
+        "object": "route_permission:notifications.admin.read"
+      },
+      {
+        "user": "role:pacient#member",
+        "relation": "assignee",
+        "object": "route_permission:notifications.patient.read"
+      },
+      {
+        "user": "role:patient#member",
+        "relation": "assignee",
+        "object": "route_permission:notifications.patient.read"
+      },
+      {
+        "user": "role:medic#member",
+        "relation": "assignee",
+        "object": "route_permission:notifications.doctor.read"
+      },
+      {
+        "user": "role:doctor#member",
+        "relation": "assignee",
+        "object": "route_permission:notifications.doctor.read"
+      },
+      {
+        "user": "role:admin#member",
+        "relation": "assignee",
+        "object": "route_permission:notifications.manage"
+      },
+      {
+        "user": "role:atendent#member",
+        "relation": "assignee",
+        "object": "route_permission:notifications.manage"
+      },
+      {
+        "user": "role:attendant#member",
+        "relation": "assignee",
+        "object": "route_permission:notifications.manage"
+      },
+      {
+        "user": "role:admin#member",
+        "relation": "assignee",
+        "object": "route_permission:analytics.operations.read"
+      },
+      {
+        "user": "role:admin#member",
+        "relation": "assignee",
+        "object": "route_permission:analytics.doctors.read"
+      },
+      {
+        "user": "role:medic#member",
+        "relation": "assignee",
+        "object": "route_permission:analytics.doctors.read"
+      },
+      {
+        "user": "role:doctor#member",
+        "relation": "assignee",
+        "object": "route_permission:analytics.doctors.read"
+      }
+    ]
+  }
+}
