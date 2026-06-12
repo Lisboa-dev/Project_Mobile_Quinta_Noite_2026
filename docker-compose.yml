@@ -1,0 +1,213 @@
+name: agendamento-medico
+
+include:
+  - services/agendaService/service.yml
+  - services/auth/service.yml
+  - services/notificationService/service.yml
+  - services/usersService/service.yml
+  - services/analyticService/service.yml
+
+services:
+  traefik:
+    image: traefik:v3.0
+    command:
+      - --api.insecure=true
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./traefik/dynamic.yml:/etc/traefik/dynamic.yml:ro
+    networks:
+      - web
+      - internal
+
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-guest}
+    ports:
+      - "${RABBITMQ_PORT:-5672}:5672"
+      - "${RABBITMQ_MANAGEMENT_PORT:-15672}:15672"
+    healthcheck:
+      test: ["CMD-SHELL", "rabbitmq-diagnostics -q check_running && rabbitmq-diagnostics -q listeners | grep -q 5672"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      - internal
+    labels:
+     - "traefik.enable=false"
+
+     
+  datadog:
+    image: datadog/agent:latest
+    profiles:
+      - observability
+    env_file:
+      - path: ./.env
+        required: false
+    environment:
+      DD_API_KEY: ${DD_API_KEY:-}
+      DD_SITE: ${DD_SITE:-datadoghq.com}
+      DD_APM_ENABLED: ${DD_APM_ENABLED:-true}
+      DD_APM_NON_LOCAL_TRAFFIC: ${DD_APM_NON_LOCAL_TRAFFIC:-true}
+      DD_DOGSTATSD_NON_LOCAL_TRAFFIC: ${DD_DOGSTATSD_NON_LOCAL_TRAFFIC:-true}
+      DD_LOGS_ENABLED: ${DD_LOGS_ENABLED:-true}
+      DD_CONTAINER_EXCLUDE_LOGS: ${DD_CONTAINER_EXCLUDE_LOGS:-name:datadog}
+    ports:
+      - "8126:8126"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - internal
+
+  openfga-postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${OPENFGA_POSTGRES_DB:-openfga}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-postgres}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - openfga-postgres-data:/var/lib/postgresql/data
+    networks:
+      - openfga-net
+
+  openfga-migrate:
+    image: openfga/openfga:v1.15.1
+    command: migrate
+    depends_on:
+      openfga-postgres:
+        condition: service_healthy
+    environment:
+      OPENFGA_DATASTORE_ENGINE: postgres
+      OPENFGA_DATASTORE_URI: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-password}@openfga-postgres:5432/${OPENFGA_POSTGRES_DB:-openfga}?sslmode=disable
+    networks:
+      - openfga-net
+    
+    labels:
+     - "traefik.enable=false"
+
+  openfga:
+    image: openfga/openfga:v1.15.1
+    command: run
+    depends_on:
+      openfga-migrate:
+        condition: service_completed_successfully
+    environment:
+      OPENFGA_DATASTORE_ENGINE: postgres
+      OPENFGA_DATASTORE_URI: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-password}@openfga-postgres:5432/${OPENFGA_POSTGRES_DB:-openfga}?sslmode=disable
+      OPENFGA_LOG_FORMAT: json
+    ports:
+      - "8090:8080"
+      - "8081:8081"
+      - "3000:3000"
+    networks:
+      - internal
+      - openfga-net
+
+  openfga-init:
+    image: python:3.12-alpine
+    command: ["python", "/openfga/bootstrap.py"]
+    depends_on:
+      openfga:
+        condition: service_started
+    environment:
+      OPENFGA_API_URL: ${OPENFGA_API_URL:-http://openfga:8080}
+      OPENFGA_STORE_NAME: ${OPENFGA_STORE_NAME:-agendamento-medico}
+      OPENFGA_MODEL_PATH: /openfga/authorization-model.json
+      OPENFGA_TUPLES_PATH: /openfga/tuples.json
+    volumes:
+      - ./openfga:/openfga:ro
+    networks:
+      - internal
+      - openfga-net
+
+    labels:
+     - "traefik.enable=false"
+
+  prometheus:
+    image: prom/prometheus:v2.55.1
+    profiles:
+      - observability
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.retention.time=15d
+    volumes:
+      - ./services/analyticService/observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    networks:
+      - web
+      - internal
+
+    labels:
+     - "traefik.enable=false"
+
+  grafana:
+    image: grafana/grafana-oss:11.3.1
+    profiles:
+      - observability
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./services/analyticService/observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./services/analyticService/observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - "${GRAFANA_PORT:-3001}:3000"
+    networks:
+      - internal
+
+    
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.114.0
+    profiles:
+      - observability
+    command:
+      - --config=/etc/otelcol-contrib/config.yml
+    volumes:
+      - ./services/analyticService/observability/otel-collector.yml:/etc/otelcol-contrib/config.yml:ro
+    ports:
+      - "${OTEL_GRPC_PORT:-4317}:4317"
+      - "${OTEL_HTTP_PORT:-4318}:4318"
+      - "${OTEL_PROM_EXPORTER_PORT:-9464}:9464"
+    networks:
+      - internal
+
+    labels:
+     - "traefik.enable=false"
+
+networks:
+  
+  web:
+    name: medagenda-web
+  
+  internal:
+    name: internal
+    internal: true
+
+  openfga-net:
+
+volumes:
+  rabbitmq-data:
+  openfga-postgres-data:
+  prometheus-data:
+  grafana-data:

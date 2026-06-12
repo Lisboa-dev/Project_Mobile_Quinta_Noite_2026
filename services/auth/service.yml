@@ -1,0 +1,55 @@
+services:
+  auth-service:
+    build:
+      context: .
+    env_file:
+      - path: ../../.env
+        required: false
+      - path: ./.env
+        required: false
+    environment:
+      AUTH_PORT: ${AUTH_PORT:-8000}
+      AUTH_DATABASE_URL: ${AUTH_DATABASE_URL:-postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-password}@auth-postgres:5432/${AUTH_POSTGRES_DB:-authdb}}
+      USER_SERVICE_URL: ${USER_SERVICE_URL:-http://users-service:8000}
+      TEST_USE_MOCK_DATA: ${AUTH_TEST_USE_MOCK_DATA:-false}
+      OPENFGA_ENABLED: ${OPENFGA_ENABLED:-true}
+      OPENFGA_API_URL: ${OPENFGA_API_URL:-http://openfga:8080}
+      OPENFGA_STORE_NAME: ${OPENFGA_STORE_NAME:-agendamento-medico}
+      OPENFGA_AUTHZ_FAIL_OPEN: ${OPENFGA_AUTHZ_FAIL_OPEN:-false}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.auth-service.rule=PathPrefix(`/auth`)"
+      - "traefik.http.routers.auth-service.entrypoints=web"
+      - "traefik.http.services.auth-service.loadbalancer.server.port=8000"
+      - "traefik.docker.network=internal"
+    ports:
+      - "${AUTH_PORT:-8000}:8000"
+    depends_on:
+      auth-postgres:
+        condition: service_healthy
+    networks:
+      - internal
+      - auth-net
+
+  auth-postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${AUTH_POSTGRES_DB:-authdb}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-postgres}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - auth-postgres-data:/var/lib/postgresql/data
+    networks:
+      - auth-net
+
+networks:
+ 
+  auth-net:
+
+volumes:
+  auth-postgres-data:

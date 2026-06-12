@@ -1,0 +1,70 @@
+{
+  "include": [
+    "services/agendaService/src",
+    "services/agendaService/tests",
+    "services/usersService/src",
+    "services/usersService/tests",
+    "services/auth/src",
+    "services/auth/tests",
+    "services/notificationService/src",
+    "services/notificationService/tests",
+    "services/analyticService/src",
+    "services/analyticService/tests",
+    "tests"
+  ],
+  "exclude": [
+    "**/__pycache__",
+    "**/.pytest_cache",
+    "**/.mypy_cache",
+    "**/.venv",
+    "**/venv"
+  ],
+  "pythonVersion": "3.11",
+  "typeCheckingMode": "basic",
+  "executionEnvironments": [
+    {
+      "root": "services/agendaService/src",
+      "extraPaths": ["services/agendaService"]
+    },
+    {
+      "root": "services/agendaService/tests",
+      "extraPaths": ["services/agendaService"]
+    },
+    {
+      "root": "services/usersService/src",
+      "extraPaths": ["services/usersService"]
+    },
+    {
+      "root": "services/usersService/tests",
+      "extraPaths": ["services/usersService"]
+    },
+    {
+      "root": "services/auth/src",
+      "extraPaths": ["services/auth"]
+    },
+    {
+      "root": "services/auth/tests",
+      "extraPaths": ["services/auth"]
+    },
+    {
+      "root": "services/notificationService/src",
+      "extraPaths": ["services/notificationService"]
+    },
+    {
+      "root": "services/notificationService/tests",
+      "extraPaths": ["services/notificationService"]
+    },
+    {
+      "root": "services/analyticService/src",
+      "extraPaths": ["services/analyticService"]
+    },
+    {
+      "root": "services/analyticService/tests",
+      "extraPaths": ["services/analyticService"]
+    },
+    {
+      "root": "tests",
+      "extraPaths": ["."]
+    }
+  ]
+}

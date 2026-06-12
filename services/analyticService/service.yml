@@ -1,0 +1,60 @@
+services:
+  analytic-service:
+    build:
+      context: .
+    env_file:
+      - path: ../../.env
+        required: false
+      - path: ./.env
+        required: false
+    environment:
+      ANALYTIC_PORT: ${ANALYTIC_PORT:-8000}
+      PROMETHEUS_URL: ${PROMETHEUS_URL:-http://prometheus:9090}
+      ANALYTIC_DATABASE_URL: ${ANALYTIC_DATABASE_URL:-postgresql://postgres:password@analytic-postgres:5432/analyticdb}
+      RABBITMQ_URL: ${RABBITMQ_URL:-amqp://guest:guest@rabbitmq:5672/}
+      USER_EVENTS_EXCHANGE: ${USER_EVENTS_EXCHANGE:-users.events}
+      RABBITMQ_EXCHANGE: ${RABBITMQ_EXCHANGE:-agenda.events}
+      ANALYTIC_EVENTS_QUEUE: ${ANALYTIC_EVENTS_QUEUE:-analytic.events}
+      ANALYTIC_EVENT_ROUTING_KEYS: ${ANALYTIC_EVENT_ROUTING_KEYS:-#}
+      ENV: ${ENV:-development}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.analytic-service.rule=PathPrefix(`/analytics`)"
+      - "traefik.http.routers.analytic-service.entrypoints=web"
+      - "traefik.http.routers.analytic-service.middlewares=auth@file"
+      - "traefik.http.services.analytic-service.loadbalancer.server.port=8000"
+      - "traefik.docker.network=internal"
+    ports:
+      - "${ANALYTIC_PORT:-8005}:8000"
+    depends_on:
+      analytic-postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+        required: false
+    networks:
+      - internal
+      - analytic-net
+
+  analytic-postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${ANALYTIC_POSTGRES_DB:-analyticdb}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-postgres}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - analytic-postgres-data:/var/lib/postgresql/data
+    networks:
+      - analytic-net
+
+networks:
+
+  analytic-net:
+
+volumes:
+  analytic-postgres-data:

@@ -1,0 +1,51 @@
+[project]
+name = "agendamento-medico"
+version = "0.1.0"
+description = ""
+authors = [
+    { name = "Lisboa-dev", email = "matheusllisboas@gmail.com" }
+]
+requires-python = ">3.11,<4.0"
+
+[tool.poetry]
+package-mode = false
+
+[tool.poetry.dependencies]
+pytest = "^9.0.2"
+pytest-asyncio = "^1.3.0"
+taskipy = "^1.14.1"
+httpx = "^0.28.1"
+authlib = "^1.6.5"
+python-dotenv = "^1.2.2"
+psycopg2-binary = "^2.9.11"
+sqlalchemy = "^2.0.49"
+testcontainers = "^4.14.2"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --tb=short"
+asyncio_mode = "auto"
+markers = [
+    "global_suite: testes globais do monorepo",
+    "service_suite: dispara suites de cada servico em subprocessos isolados",
+    "integration: testes que podem usar infraestrutura real",
+    "mock_data: testes que usam dados mockados por TEST_USE_MOCK_DATA",
+]
+
+[tool.taskipy.tasks]
+test = "python tests/run_tests.py"
+test-all = "python tests/run_tests.py"
+test-agenda = "python tests/run_tests.py agendaService --services-only"
+test-users = "python tests/run_tests.py usersService --services-only"
+test-auth = "python tests/run_tests.py auth --services-only"
+test-notification = "python tests/run_tests.py notificationService --services-only"
+test-analytic = "python tests/run_tests.py analyticService --services-only"
+test-global = "pytest tests/global"
+
+start = """
+docker stack deploy \
+  --compose-file stack.yml \
+  --compose-file services/api/service.yml \
+  --compose-file services/worker/service.yml \
+  minha-stack
+"""

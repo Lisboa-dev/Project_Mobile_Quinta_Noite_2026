@@ -1,0 +1,136 @@
+{
+  "schema_version": "1.1",
+  "type_definitions": [
+    {
+      "type": "user"
+    },
+    {
+      "type": "role",
+      "relations": {
+        "member": {
+          "this": {}
+        }
+      },
+      "metadata": {
+        "relations": {
+          "member": {
+            "directly_related_user_types": [
+              {
+                "type": "user"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "service",
+      "relations": {
+        "reader": {
+          "this": {}
+        },
+        "writer": {
+          "this": {}
+        },
+        "admin": {
+          "this": {}
+        },
+        "can_read": {
+          "union": {
+            "child": [
+              {
+                "computedUserset": {
+                  "relation": "reader"
+                }
+              },
+              {
+                "computedUserset": {
+                  "relation": "writer"
+                }
+              },
+              {
+                "computedUserset": {
+                  "relation": "admin"
+                }
+              }
+            ]
+          }
+        },
+        "can_write": {
+          "union": {
+            "child": [
+              {
+                "computedUserset": {
+                  "relation": "writer"
+                }
+              },
+              {
+                "computedUserset": {
+                  "relation": "admin"
+                }
+              }
+            ]
+          }
+        },
+        "can_admin": {
+          "computedUserset": {
+            "relation": "admin"
+          }
+        }
+      },
+      "metadata": {
+        "relations": {
+          "reader": {
+            "directly_related_user_types": [
+              {
+                "type": "role",
+                "relation": "member"
+              }
+            ]
+          },
+          "writer": {
+            "directly_related_user_types": [
+              {
+                "type": "role",
+                "relation": "member"
+              }
+            ]
+          },
+          "admin": {
+            "directly_related_user_types": [
+              {
+                "type": "role",
+                "relation": "member"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "route_permission",
+      "relations": {
+        "assignee": {
+          "this": {}
+        },
+        "can_access": {
+          "computedUserset": {
+            "relation": "assignee"
+          }
+        }
+      },
+      "metadata": {
+        "relations": {
+          "assignee": {
+            "directly_related_user_types": [
+              {
+                "type": "role",
+                "relation": "member"
+              }
+            ]
+          }
+        }
+      }
+    }
+  ]
+}
