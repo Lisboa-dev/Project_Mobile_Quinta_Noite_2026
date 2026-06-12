@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True)
 class UpdateAdminCommand:
-    id: int
+    id: str
     userName: str | None = None
     email: str | None = None
     name: str | None = None

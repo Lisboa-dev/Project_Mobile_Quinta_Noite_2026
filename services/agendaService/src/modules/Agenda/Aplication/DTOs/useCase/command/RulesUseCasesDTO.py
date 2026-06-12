@@ -23,10 +23,13 @@ class CreateGenericRuleCommand:
 @dataclass(frozen=True)
 class CreateSpecificRuleCommand:
     ruleEffect: object
-    target: str
+    id: str
+    type: object
     rangeTime: object
     description: str
     triggered_by_id: str | None = None
+    target: str | None = None
+    targetType: object | None = None
     nome: str | None = None
 
 @dataclass(frozen=True)

@@ -16,6 +16,10 @@ class RabbitMQClient:
         self._exchange: aio_pika.abc.AbstractExchange | None = None
 
     async def connect(self) -> aio_pika.abc.AbstractExchange:
+        if self._connection is not None and self._connection.is_closed:
+            self._channel = None
+            self._exchange = None
+
         if self._exchange is None:
             self._connection = await aio_pika.connect_robust(
                 self._url,
@@ -39,21 +43,25 @@ class RabbitMQClient:
         await exchange.publish(message, routing_key=routing_key)
 
     async def consume(self, queue_name: str, routing_keys: list[str], handler) -> None:
-        if self._connection is None:
-            self._connection = await aio_pika.connect_robust(
-                self._url,
-                timeout=settings.client_timeout_seconds,
+        try:
+            if self._connection is None or self._connection.is_closed:
+                self._connection = await aio_pika.connect_robust(
+                    self._url,
+                    timeout=settings.client_timeout_seconds,
+                )
+            self._channel = await self._connection.channel()
+            self._exchange = await self._channel.declare_exchange(
+                self._exchange_name,
+                aio_pika.ExchangeType.TOPIC,
+                durable=True,
             )
-        channel = await self._connection.channel()
-        exchange = await channel.declare_exchange(
-            self._exchange_name,
-            aio_pika.ExchangeType.TOPIC,
-            durable=True,
-        )
-        queue = await channel.declare_queue(queue_name, durable=True)
-        for routing_key in routing_keys:
-            await queue.bind(exchange, routing_key=routing_key)
-        await queue.consume(handler)
+            queue = await self._channel.declare_queue(queue_name, durable=True)
+            for routing_key in routing_keys:
+                await queue.bind(self._exchange, routing_key=routing_key)
+            await queue.consume(handler)
+        except Exception:
+            await self.close()
+            raise
 
     async def ping(self) -> ClientHealth:
         try:

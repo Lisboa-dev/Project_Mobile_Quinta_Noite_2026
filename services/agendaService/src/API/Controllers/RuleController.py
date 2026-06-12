@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, status
 
+from src.api.dependencies import require_admin
 from src.api.provider import (
     get_create_block_rule_use_case,
     get_create_generic_rule_use_case,
@@ -9,6 +10,7 @@ from src.api.provider import (
     get_delete_rule_use_case,
     get_list_rules_query_use_case,
     get_rule_by_id_query_use_case,
+    get_rules_admin_context_query_use_case,
 )
 from src.api.interfaces.rule import (
     CreateBlockRuleRequest,
@@ -20,16 +22,39 @@ from src.api.interfaces.rule import (
 from src.modules.agenda.aplication.dtos.useCase.query import GetByIdQuery, ListQuery
 
 
-routerRule = APIRouter(prefix="/rules", tags=["Rules"])
+routerRule = APIRouter(prefix="/rules", tags=["Rules"], dependencies=[Depends(require_admin)])
 
 
 @routerRule.get("/")
 async def list_rules(
     limit: int | None = None,
     offset: int = 0,
+    type: str | None = None,
+    id: str | None = None,
+    target_id: str | None = None,
+    ruleEffect: str | None = None,
     use_case=Depends(get_list_rules_query_use_case),
 ):
-    return await use_case.execute(ListQuery(limit=limit, offset=offset))
+    return await use_case.execute(
+        ListQuery(
+            limit=limit,
+            offset=offset,
+            type=type,
+            id=id,
+            target_id=target_id,
+            ruleEffect=ruleEffect,
+        )
+    )
+
+
+@routerRule.get("/admin/context")
+async def get_rules_admin_context(use_case=Depends(get_rules_admin_context_query_use_case)):
+    return await use_case.execute()
+
+
+@routerRule.get("/detail/{rule_id}")
+async def detail_rule(rule_id: str, use_case=Depends(get_rule_by_id_query_use_case)):
+    return await use_case.execute(GetByIdQuery(id=rule_id))
 
 
 @routerRule.get("/{rule_id}")

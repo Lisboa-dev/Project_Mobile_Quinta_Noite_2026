@@ -9,15 +9,15 @@ class Day:
    
     def __init__(
         self,
-        rooms: list[Room],
         date: Date,
         weekday: int,
         availability: bool,
         status: DayStatus,
         rules: list[BaseRule],
+        rooms: list[Room] | None =None
     ):
 
-        self._rooms = rooms or []
+        self._rooms = [] if rooms is None else rooms
         self._date = date
         self._availability = availability
         

@@ -1,5 +1,6 @@
 from contextlib import asynccontextmanager
 import asyncio
+from uuid import uuid4
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 
@@ -44,9 +45,10 @@ def seed_users() -> None:
             exists = session.query(Usuario).filter(Usuario.userName == username).first()
             if exists:
                 if cargo == CargoEnum.MEDICO and crm and exists.doctor is None:
-                    session.add(Doctor(user_id=exists.id, crm=crm))
+                    session.add(Doctor(id=str(uuid4()), user_id=exists.id, crm=crm))
                 continue
             user = Usuario(
+                id=str(uuid4()),
                 userName=username,
                 nome=nome,
                 email=email,
@@ -56,7 +58,13 @@ def seed_users() -> None:
             session.add(user)
             session.flush()
             if cargo == CargoEnum.MEDICO and crm:
-                session.add(Doctor(user_id=user.id, crm=crm))
+                session.add(Doctor(id=str(uuid4()), user_id=user.id, crm=crm))
+
+
+def _read_value(value):
+    if isinstance(value, tuple):
+        value = value[0] if len(value) == 1 else None
+    return getattr(value, "valor", None) or getattr(value, "value", value)
 
 
 @asynccontextmanager
@@ -74,7 +82,26 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="Users Service", lifespan=lifespan)
+app = FastAPI(
+    title="Users Service",
+    version="1.0.0",
+    description=(
+        "Servico de usuarios. Gerencia usuarios, admins, medicos, atendentes, pacientes, "
+        "imagens de perfil e lookup interno usado pelo Auth. Todos os IDs de entidade sao UUID string."
+    ),
+    openapi_tags=[
+        {"name": "health", "description": "Healthcheck do Users Service."},
+        {"name": "users", "description": "CRUD generico de usuarios e imagem de perfil."},
+        {"name": "admins", "description": "Listagem, detalhe, promocao, rebaixamento e remocao de admins."},
+        {"name": "medics", "description": "Criacao, listagem, detalhe e remocao de medicos."},
+        {"name": "atendents", "description": "Criacao, listagem, detalhe e remocao de atendentes."},
+        {"name": "pacients", "description": "Criacao, listagem, detalhe e remocao de pacientes."},
+        {"name": "config", "description": "Configuracoes client-side, como limites de upload."},
+        {"name": "lookup", "description": "Lookup interno por email ou username para autenticacao."},
+        {"name": "observability", "description": "Metricas Prometheus do service."},
+    ],
+    lifespan=lifespan,
+)
 
 app.include_router(routerAdmins)
 app.include_router(routerAtendents)
@@ -100,12 +127,12 @@ def lookup_user(email: str | None = None, name: str | None = None):
         return []
     return [
         {
-            "id": user.id,
+            "id": str(user.id),
             "email": user.email.value,
             "name": user.userName.value,
             "password": user.password.hash,
-            "role": user.cargo.valor,
-            "cargo": user.cargo.valor,
+            "role": _read_value(user.cargo),
+            "cargo": _read_value(user.cargo),
         }
     ]
 

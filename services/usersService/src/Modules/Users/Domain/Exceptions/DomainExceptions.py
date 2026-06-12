@@ -30,5 +30,5 @@ class UserAlreadyExistsException(DomainException):
 
 
 class UserNotFoundException(DomainException):
-    def __init__(self, user_id: int | str):
+    def __init__(self, user_id: str):
         super().__init__(f"usuario nao encontrado: {user_id}")

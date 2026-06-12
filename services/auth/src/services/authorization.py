@@ -39,6 +39,12 @@ ROLE_ALIASES = {
 
 
 ROUTE_POLICIES: tuple[tuple[set[str], re.Pattern[str], str], ...] = (
+    (READ_METHODS, re.compile(r"^/users/users/[^/]+/?$"), "users.self.read"),
+    (READ_METHODS, re.compile(r"^/users/medics(/.*)?$"), "users.medics.read"),
+    (READ_METHODS, re.compile(r"^/users/doctors(/.*)?$"), "users.medics.read"),
+    (READ_METHODS, re.compile(r"^/users/pacients(/.*)?$"), "users.pacients.read"),
+    (READ_METHODS, re.compile(r"^/users/patients(/.*)?$"), "users.pacients.read"),
+    (READ_METHODS, re.compile(r"^/users/admins(/.*)?$"), "users.admins.read"),
     ({"POST"}, re.compile(r"^/users/admins/doctors/?$"), "users.doctors.create"),
     ({"POST"}, re.compile(r"^/users/medics/?$"), "users.doctors.create"),
     (WRITE_METHODS, re.compile(r"^/users/admins(/.*)?$"), "users.admins.manage"),

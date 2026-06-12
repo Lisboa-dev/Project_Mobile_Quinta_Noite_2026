@@ -22,6 +22,7 @@ class RoomRepository(SQLiteRepository):
                 (room_id, room.name, self._dump(room)),
             )
         await self._cache_entity("rooms", room_id, room)
+        await self._invalidate_room_admin_cache(room_id)
 
     async def update(self, room) -> bool:
         await self.save(room)
@@ -30,6 +31,7 @@ class RoomRepository(SQLiteRepository):
     async def delete(self, room_id: str) -> None:
         self._delete_by_id("rooms", room_id)
         await self._invalidate_entity("rooms", room_id)
+        await self._invalidate_room_admin_cache(room_id)
 
     async def deleteRoom(self, room_id: str) -> None:
         await self.delete(room_id)
@@ -50,3 +52,7 @@ class RoomRepository(SQLiteRepository):
                 """
             ).fetchall()
             return [RuleMapper.toDomain(self._load(row["data"])) for row in rows]
+
+    async def _invalidate_room_admin_cache(self, room_id: str) -> None:
+        await self._redis.delete(f"agenda:rooms:id:{room_id}:admin-detail")
+        await self._redis.delete_pattern(self._list_cache_key("rooms", "admin*"))

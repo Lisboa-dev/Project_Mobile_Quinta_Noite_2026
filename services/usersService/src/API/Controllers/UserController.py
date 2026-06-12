@@ -62,7 +62,7 @@ def list_users(repository=Depends(UserFactory.user_repository_factory)):
 
 
 @routerUsersCrud.get("/{user_id}", response_model=UserResponse, responses={404: {"model": ErrorResponse}})
-def detail_user(user_id: int, repository=Depends(UserFactory.user_repository_factory)):
+def detail_user(user_id: str, repository=Depends(UserFactory.user_repository_factory)):
     try:
         user = repository.find_by_id(user_id)
         if user is None:
@@ -73,7 +73,7 @@ def detail_user(user_id: int, repository=Depends(UserFactory.user_repository_fac
 
 
 @routerUsersCrud.put("/{user_id}", response_model=UserResponse, responses={404: {"model": ErrorResponse}})
-def update_user(user_id: int, data: UserUpdateRequest, repository=Depends(UserFactory.user_repository_factory)):
+def update_user(user_id: str, data: UserUpdateRequest, repository=Depends(UserFactory.user_repository_factory)):
     try:
         payload = data.model_dump(exclude_unset=True)
         updated = repository.update(user_id, payload)
@@ -86,7 +86,7 @@ def update_user(user_id: int, data: UserUpdateRequest, repository=Depends(UserFa
 
 @routerUsersCrud.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT, responses={404: {"model": ErrorResponse}})
 def delete_user(
-    user_id: int,
+    user_id: str,
     repository=Depends(UserFactory.user_repository_factory),
     storage: MinioProfileImageStorage = Depends(profile_image_storage_factory),
 ):
@@ -103,7 +103,7 @@ def delete_user(
 
 @routerUsersCrud.post("/{user_id}/profile-image", response_model=UserResponse, responses={400: {"model": ErrorResponse}, 404: {"model": ErrorResponse}})
 async def upload_profile_image(
-    user_id: int,
+    user_id: str,
     file: UploadFile = File(...),
     use_case=Depends(UserFactory.add_profile_image_use_case),
     storage: MinioProfileImageStorage = Depends(profile_image_storage_factory),
@@ -135,7 +135,7 @@ async def upload_profile_image(
 
 @routerUsersCrud.delete("/{user_id}/profile-image", response_model=UserResponse, responses={404: {"model": ErrorResponse}})
 def delete_profile_image(
-    user_id: int,
+    user_id: str,
     repository=Depends(UserFactory.user_repository_factory),
     storage: MinioProfileImageStorage = Depends(profile_image_storage_factory),
 ):

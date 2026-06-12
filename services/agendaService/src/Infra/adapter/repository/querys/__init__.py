@@ -1,5 +1,6 @@
 from .AgendaQueryRepositories import (
     AppointmentQueryRepository,
+    AppointmentTypeQueryRepository,
     CalendarQueryRepository,
     ClinicQueryRepository,
     DoctorQueryRepository,
@@ -10,6 +11,7 @@ from .AgendaQueryRepositories import (
 
 __all__ = [
     "AppointmentQueryRepository",
+    "AppointmentTypeQueryRepository",
     "CalendarQueryRepository",
     "ClinicQueryRepository",
     "DoctorQueryRepository",

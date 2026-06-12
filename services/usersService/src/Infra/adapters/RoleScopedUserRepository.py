@@ -32,7 +32,7 @@ class RoleScopedUserRepository(UserRepository):
             )
             return [user for user in (self._to_domain(model) for model in models) if user is not None]
 
-    def find_by_id(self, id: int) -> User | None:
+    def find_by_id(self, id: str) -> User | None:
         user = super().find_by_id(id)
         return user if self._matches_scope(user) else None
 

@@ -12,6 +12,7 @@ class Admin(User):
         id: str | None = None,
         profile_image_url: str | None = None,
         profile_image_object: str | None = None,
+        password_hashed: bool = False,
     ):
         super().__init__(
             userName=userName,
@@ -21,6 +22,7 @@ class Admin(User):
             id=id,
             profile_image_url=profile_image_url,
             profile_image_object=profile_image_object,
+            password_hashed=password_hashed,
         )
-        self.cargo = "ADMIN",
+        self.cargo = "ADMIN"
         self.cpf = cpf

@@ -11,7 +11,7 @@ def command_to_context(command: Any) -> Any:
     if callable(to_dict):
         return to_dict()
 
-    if is_dataclass(command):
+    if is_dataclass(command) and not isinstance(command, type):
         return asdict(command)
 
     return str(command)

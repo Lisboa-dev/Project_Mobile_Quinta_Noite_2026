@@ -6,6 +6,12 @@ from src.services.authorization import OpenFGAAuthorizationService
 @pytest.mark.parametrize(
     ("path", "method", "permission"),
     [
+        ("/users/users/user-1", "GET", "users.self.read"),
+        ("/users/medics", "GET", "users.medics.read"),
+        ("/users/medics/medic-1", "GET", "users.medics.read"),
+        ("/users/pacients", "GET", "users.pacients.read"),
+        ("/users/pacients/pacient-1", "GET", "users.pacients.read"),
+        ("/users/admins", "GET", "users.admins.read"),
         ("/users/admins/doctors", "POST", "users.doctors.create"),
         ("/users/medics", "POST", "users.doctors.create"),
         ("/agenda/appointments/apt-1", "PATCH", "agenda.appointments.manage"),

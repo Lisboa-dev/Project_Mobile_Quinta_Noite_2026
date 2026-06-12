@@ -21,7 +21,7 @@ services:
       - "traefik.http.routers.notificacao-service.middlewares=auth@file,notification-strip"
       - "traefik.http.middlewares.notification-strip.stripprefix.prefixes=/notification"
       - "traefik.http.services.notificacao-service.loadbalancer.server.port=8000"
-      - "traefik.docker.network=web"
+      - "traefik.docker.network=internal"
     ports:
       - "${NOTIFICACAO_PORT:-8003}:8000"
     depends_on:
@@ -31,7 +31,7 @@ services:
         condition: service_healthy
         required: false
     networks:
-      - web
+      - internal
       - notification-net
 
   notification-postgres:
@@ -51,8 +51,7 @@ services:
       - notification-net
 
 networks:
-  web:
-    name: web
+
   notification-net:
 
 volumes:

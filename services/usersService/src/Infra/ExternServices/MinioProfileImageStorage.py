@@ -48,7 +48,7 @@ class MinioProfileImageStorage:
                 raise
             self.client.create_bucket(Bucket=self.bucket_name)
 
-    def save(self, user_id: int, filename: str, content_type: str, content: bytes) -> StoredProfileImage:
+    def save(self, user_id: str, filename: str, content_type: str, content: bytes) -> StoredProfileImage:
         self.ensure_bucket()
         extension = Path(filename or "").suffix.lower()
         object_name = f"profiles/{user_id}/{uuid4().hex}{extension}"

@@ -1,5 +1,6 @@
 from .AgendaQueryRepositoryPort import (
     AppointmentQueryRepositoryPort,
+    AppointmentTypeQueryRepositoryPort,
     CalendarQueryRepositoryPort,
     ClinicQueryRepositoryPort,
     DoctorQueryRepositoryPort,
@@ -11,6 +12,7 @@ from .AgendaQueryRepositoryPort import (
 
 __all__ = [
     "AppointmentQueryRepositoryPort",
+    "AppointmentTypeQueryRepositoryPort",
     "CalendarQueryRepositoryPort",
     "ClinicQueryRepositoryPort",
     "DoctorQueryRepositoryPort",

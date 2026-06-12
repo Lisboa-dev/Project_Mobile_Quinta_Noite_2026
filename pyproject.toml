@@ -24,6 +24,7 @@ testcontainers = "^4.14.2"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-ra --tb=short"
+asyncio_mode = "auto"
 markers = [
     "global_suite: testes globais do monorepo",
     "service_suite: dispara suites de cada servico em subprocessos isolados",

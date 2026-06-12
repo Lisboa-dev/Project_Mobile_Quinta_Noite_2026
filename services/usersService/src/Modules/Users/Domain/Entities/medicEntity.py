@@ -14,6 +14,7 @@ class Medic(User):
         crm: str | None = None,
         profile_image_url: str | None = None,
         profile_image_object: str | None = None,
+        password_hashed: bool = False,
     ):
         super().__init__(
             userName=userName,
@@ -23,6 +24,7 @@ class Medic(User):
             id=id,
             profile_image_url=profile_image_url,
             profile_image_object=profile_image_object,
+            password_hashed=password_hashed,
         )
         self.cargo = 'MEDICO'
         self.crm = crm

@@ -93,15 +93,42 @@ class CreateGenericRuleRequest(ApiInput):
 
 class CreateSpecificRuleRequest(ApiInput):
     ruleEffect: Any
-    target: str
+    id: str | None = None
+    type: Any = None
+    target: str | None = None
     rangeTime: Any
     description: str
+    targetType: Any = None
     nome: str | None = None
 
-    @field_validator("ruleEffect", "target", "description")
+    @field_validator("ruleEffect", "description")
     @classmethod
     def validate_required_text(cls, value: Any, info):
         return required_non_empty(value, info.field_name)
+
+    @field_validator("id", "target", "nome")
+    @classmethod
+    def validate_optional_text(cls, value: str | None, info) -> str | None:
+        if value is None:
+            return None
+        return required_non_empty(value, info.field_name)
+
+    @field_validator("type", "targetType")
+    @classmethod
+    def validate_optional_scope_type(cls, value: Any, info):
+        if value is None:
+            return None
+        return required_non_empty(value, info.field_name)
+
+    @model_validator(mode="after")
+    def validate_specific_scope(self):
+        self.id = self.id or self.target
+        self.type = self.type or self.targetType
+        if self.id is None:
+            raise ValueError("specific rule must define id")
+        if self.type is None:
+            raise ValueError("specific rule must define type")
+        return self
 
     @field_validator("rangeTime")
     @classmethod
@@ -111,10 +138,13 @@ class CreateSpecificRuleRequest(ApiInput):
     def to_command(self) -> CreateSpecificRuleCommand:
         return CreateSpecificRuleCommand(
             ruleEffect=self.ruleEffect,
-            target=self.target,
+            id=self.id or self.target or "",
+            type=self.type or self.targetType,
             rangeTime=self.rangeTime,
             description=self.description,
             triggered_by_id=self.triggered_by_id,
+            target=self.target,
+            targetType=self.targetType,
             nome=self.nome,
         )
 

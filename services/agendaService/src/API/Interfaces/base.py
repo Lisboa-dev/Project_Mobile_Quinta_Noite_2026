@@ -60,7 +60,7 @@ def validate_range_time(value: Any, field_name: str) -> Any:
         end = value.get("end_time") or value.get("end")
         validate_time_text(start, f"{field_name}.start_time")
         validate_time_text(end, f"{field_name}.end_time")
-        return value
+        return {"start_time": str(start).strip(), "end_time": str(end).strip()}
     text = required_non_empty(value, field_name)
     if "-" not in text:
         raise ValueError(f"{field_name} must use 'HH:MM-HH:MM' or range object")

@@ -9,6 +9,8 @@ class RuleRepository(SQLiteRepository):
     async def save(self, rule) -> None:
         rule_id = self._entity_id(rule)
         data = self._load(self._dump(rule))
+        target = data.get("targetId") or data.get("target_id") or data.get("target")
+        target_type = data.get("type") or data.get("targetType") or data.get("target_type")
         with self._db.connect() as connection:
             connection.execute(
                 """
@@ -23,24 +25,27 @@ class RuleRepository(SQLiteRepository):
                 """,
                 (
                     rule_id,
-                    data.get("target"),
-                    data.get("targetType"),
+                    target,
+                    target_type,
                     data.get("ruleEffect", "NULL"),
                     self._dump(rule),
                 ),
             )
         await self._cache_entity("rules", rule_id, rule)
         await self._rule_optimization_cache.invalidate_all()
+        await self._invalidate_room_admin_cache()
 
     async def delete(self, id: str) -> None:
         self._delete_by_id("rules", id)
         await self._invalidate_entity("rules", id)
         await self._rule_optimization_cache.invalidate_all()
+        await self._invalidate_room_admin_cache()
 
     async def deleteRule(self, rule_id: str) -> bool:
         deleted = self._delete_by_id("rules", rule_id)
         await self._invalidate_entity("rules", rule_id)
         await self._rule_optimization_cache.invalidate_all()
+        await self._invalidate_room_admin_cache()
         return deleted
 
     async def getDayRules(self) -> list:
@@ -52,3 +57,7 @@ class RuleRepository(SQLiteRepository):
                 "SELECT data FROM rules WHERE target_type IS NULL OR target_type = 'DAY'"
             ).fetchall()
             return [RuleMapper.toDomain(self._load(row["data"])) for row in rows]
+
+    async def _invalidate_room_admin_cache(self) -> None:
+        await self._redis.delete_pattern(self._list_cache_key("rooms", "admin*"))
+        await self._redis.delete_pattern("agenda:rooms:id:*:admin-detail")

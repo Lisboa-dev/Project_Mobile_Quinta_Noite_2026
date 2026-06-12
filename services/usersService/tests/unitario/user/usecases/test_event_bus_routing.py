@@ -5,11 +5,12 @@ import pytest
 
 event_bus_module = pytest.importorskip("src.infra.adapters.EventBus")
 events_module = pytest.importorskip("src.modules.users.application.events")
+USER_EVENT_ID = "550e8400-e29b-41d4-a716-446655440000"
 
 
 @dataclass(frozen=True)
 class UserCreatedEvent:
-    user_id: int
+    user_id: str
     userName: str
     cargo: str
     occurred_at: datetime
@@ -24,7 +25,7 @@ def test_users_event_bus_routes_doctor_created_events(monkeypatch):
 
     bus = event_bus_module.InMemoryEventBus(broadcasters=[FakeBroadcaster()])
 
-    bus.publish(UserCreatedEvent(1, "medico", "MEDICO", datetime.now(timezone.utc)))
+    bus.publish(UserCreatedEvent(USER_EVENT_ID, "medico", "MEDICO", datetime.now(timezone.utc)))
 
     assert published[0][1] == "users.doctor.created"
     assert published[0][0]["event"] == "UserCreatedEvent"

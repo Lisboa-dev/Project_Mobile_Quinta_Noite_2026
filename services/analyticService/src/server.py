@@ -30,7 +30,16 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Analytic Service",
     version="0.1.0",
-    description="Servico de analytics orientado por eventos.",
+    description=(
+        "Servico de analytics orientado por eventos. Lista eventos ingeridos, "
+        "resume contagens por origem/tipo e expoe metricas Prometheus."
+    ),
+    openapi_tags=[
+        {"name": "health", "description": "Healthcheck do Analytic Service."},
+        {"name": "events", "description": "Eventos recentes e agregacoes por source/event."},
+        {"name": "metrics", "description": "Metricas Prometheus geradas pelo service."},
+        {"name": "observability", "description": "Metricas HTTP do service."},
+    ],
     lifespan=lifespan,
 )
 app.include_router(router)

@@ -9,4 +9,5 @@ class DayStatus(Enum):
     SCHEDULED = "SCHEDULED"
     BLOCKED = "BLOCKED"
     HOLIDAY = "HOLIDAY"
+    UNAVAILABLE = "UNAVAILABLE"
     

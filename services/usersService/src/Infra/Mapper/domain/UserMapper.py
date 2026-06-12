@@ -30,6 +30,7 @@ class UserMapper:
     def to_persistence_dict(user: User) -> dict:
         data = user.to_dict()
         return {
+            "id": data["id"],
             "userName": data["userName"],
             "nome": data["nome"],
             "email": data["email"],

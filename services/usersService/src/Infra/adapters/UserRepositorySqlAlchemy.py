@@ -1,4 +1,5 @@
 from typing import overload
+from uuid import uuid4
 
 from src.infra.config.db.liteSql.LiteSql import get_query
 from src.infra.mapper.domain.UserMapper import UserMapper
@@ -23,8 +24,10 @@ class UserRepository:
 
     def save(self, user: User) -> User:
         data = UserMapper.to_persistence_dict(user)
+        user_id = data.get("id") or str(uuid4())
         with get_query() as session:
             model = Usuario(
+                id=user_id,
                 userName=data["userName"],
                 nome=data["nome"],
                 email=data["email"],
@@ -36,7 +39,7 @@ class UserRepository:
             session.add(model)
             session.flush()
             if model.cargo == CargoEnum.MEDICO and data.get("crm"):
-                session.add(Doctor(user_id=model.id, crm=data["crm"]))
+                session.add(Doctor(id=str(uuid4()), user_id=model.id, crm=data["crm"]))
                 session.flush()
             session.refresh(model)
             return self._to_domain(model)
@@ -48,7 +51,7 @@ class UserRepository:
                 for model in session.query(Usuario).options(joinedload(Usuario.doctor)).order_by(Usuario.id.asc()).all()
             ]
 
-    def find_by_id(self, id: int) -> User | None:
+    def find_by_id(self, id: str) -> User | None:
         with get_query() as session:
             return self._to_domain(
                 session.query(Usuario).options(joinedload(Usuario.doctor)).filter(Usuario.id == id).first()
@@ -66,7 +69,7 @@ class UserRepository:
                 session.query(Usuario).options(joinedload(Usuario.doctor)).filter(Usuario.userName == username).first()
             )
 
-    def update(self, id: int, data: dict) -> User | None:
+    def update(self, id: str, data: dict) -> User | None:
         with get_query() as session:
             model = session.query(Usuario).filter(Usuario.id == id).first()
             if model is None:
@@ -81,7 +84,7 @@ class UserRepository:
             for key, value in data.items():
                 if key == "crm":
                     if model.doctor is None and value:
-                        model.doctor = Doctor(crm=value)
+                        model.doctor = Doctor(id=str(uuid4()), user_id=model.id, crm=value)
                     elif model.doctor is not None and value:
                         model.doctor.crm = value
                     continue
@@ -96,7 +99,7 @@ class UserRepository:
             session.refresh(model)
             return self._to_domain(model)
 
-    def delete(self, id: int) -> bool:
+    def delete(self, id: str) -> bool:
         with get_query() as session:
             model = session.query(Usuario).filter(Usuario.id == id).first()
             if model is None:
@@ -104,7 +107,7 @@ class UserRepository:
             session.delete(model)
             return True
 
-    def add_profile_image(self, id: int, profile_image_url: str, profile_image_object: str) -> None:
+    def add_profile_image(self, id: str, profile_image_url: str, profile_image_object: str) -> None:
         self.update(
             id,
             {

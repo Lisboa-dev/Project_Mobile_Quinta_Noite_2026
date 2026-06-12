@@ -65,7 +65,7 @@ class UserUpdateRequest(BaseModel):
 
 
 class UserResponse(BaseModel):
-    id: int | str | None
+    id: str | None
     userName: str
     email: str
     name: str

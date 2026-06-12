@@ -1,6 +1,6 @@
 from .AgendaRepoSqlAlchemy import AgendaRepository
 from .AppointmentRepoSqlAlchemy import AppointmentRepository
-from .AppointmentSchedulingRepoSqlAlchemy import AppointmentSchedulingRepository
+from ..querys.AppointmentSchedulingRepoSqlAlchemy import AppointmentSchedulingRepository
 from .CalendarRepoSqlAlchemy import CalendarRepository
 from .ClinicRepoSqlAlchemy import ClinicRepository
 from .DoctoRepoSqlAlchemy import DoctorRepository

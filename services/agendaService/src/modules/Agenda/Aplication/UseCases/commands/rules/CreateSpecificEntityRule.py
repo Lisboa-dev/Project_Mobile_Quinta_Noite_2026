@@ -46,7 +46,9 @@ class CreateSpecificDayRuleUseCase:
 
 
 def _effect(value: object) -> RuleEffect:
-    return value if isinstance(value, RuleEffect) else RuleEffect[str(value).upper()]
+    if isinstance(value, RuleEffect):
+        return value
+    return RuleEffect[_effect_key(value)]
 
 
 def _target_type(value: object) -> TargetType | None:
@@ -71,3 +73,18 @@ def _date(value: object) -> Date:
         return Date(day=int(value["day"]), month=int(value["month"]), year=int(value["year"]))
     year, month, day = str(value).split("-")
     return Date(day=int(day), month=int(month), year=int(year))
+
+
+def _effect_key(value: object) -> str:
+    text = str(value).strip()
+    if "." in text:
+        text = text.rsplit(".", 1)[-1]
+    key = text.upper()
+    aliases = {
+        "ALLOW": "ADD",
+        "AVAILABLE": "ADD",
+        "DENY": "REMOVE",
+        "DISALLOW": "REMOVE",
+        "UNAVAILABLE": "REMOVE",
+    }
+    return aliases.get(key, key)

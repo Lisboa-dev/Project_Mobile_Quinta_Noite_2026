@@ -38,7 +38,16 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Notification Service",
     version="1.0.0",
-    description="Servico de notificacoes orientado por eventos.",
+    description=(
+        "Servico de notificacoes orientado por eventos. Consulta notificacoes por usuario, "
+        "paciente, medico ou admin, marca leitura e transmite eventos por websocket."
+    ),
+    openapi_tags=[
+        {"name": "health", "description": "Healthcheck do Notification Service."},
+        {"name": "notifications", "description": "Consultas, bell summaries, unread count e marcacao de leitura."},
+        {"name": "websocket", "description": "Streams websocket para eventos brutos e notificacoes criadas."},
+        {"name": "observability", "description": "Metricas Prometheus do service."},
+    ],
     lifespan=lifespan,
 )
 

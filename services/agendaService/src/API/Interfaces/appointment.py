@@ -16,19 +16,11 @@ class CreateAppointmentRequest(ApiInput):
     patient: str
     time: str
     type: str
-    room: str | None = None
 
     @field_validator("scheduler_id", "weekday", "doctor", "patient", "type")
     @classmethod
     def validate_required_text(cls, value: str, info):
         return required_non_empty(value, info.field_name)
-
-    @field_validator("room")
-    @classmethod
-    def validate_optional_room(cls, value: str | None):
-        if value is None:
-            return None
-        return required_non_empty(value, "room")
 
     @field_validator("date")
     @classmethod
@@ -50,7 +42,6 @@ class CreateAppointmentRequest(ApiInput):
             time=self.time,
             type=self.type,
             triggered_by_id=self.triggered_by_id,
-            room=self.room,
         )
 
 

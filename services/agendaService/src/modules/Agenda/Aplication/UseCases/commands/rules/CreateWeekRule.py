@@ -40,25 +40,51 @@ class CreateWeekRuleUseCase:
                 code="CREATE_WEEK_RULE_ERROR",
                 message="Error creating week rule",
                 use_case=self.__class__.__name__,
-                context={"command": str(command)},
+                context={"command": str(command), "original_error": str(e)},
                 original=e,
             ) from e
 
 
 def _effect(value: object) -> RuleEffect:
-    return value if isinstance(value, RuleEffect) else RuleEffect[str(value).upper()]
+    if isinstance(value, RuleEffect):
+        return value
+    return RuleEffect[_effect_key(value)]
 
 
 def _target_type(value: object) -> TargetType | None:
     if value is None or isinstance(value, TargetType):
         return value
-    return TargetType[str(value).upper()]
+    key = _enum_key(value)
+    if key in {"", "NULL", "NONE"}:
+        return None
+    return TargetType[key]
 
 
 def _range(value: object) -> RangeTime:
     if isinstance(value, RangeTime):
         return value
     if isinstance(value, dict):
-        return RangeTime(str(value["start_time"]), str(value["end_time"]))
+        start = value.get("start_time") or value.get("start")
+        end = value.get("end_time") or value.get("end")
+        return RangeTime(str(start), str(end))
     start, end = str(value).split("-", 1)
     return RangeTime(start.strip(), end.strip())
+
+
+def _enum_key(value: object) -> str:
+    text = str(value).strip()
+    if "." in text:
+        text = text.rsplit(".", 1)[-1]
+    return text.upper()
+
+
+def _effect_key(value: object) -> str:
+    aliases = {
+        "ALLOW": "ADD",
+        "AVAILABLE": "ADD",
+        "DENY": "REMOVE",
+        "DISALLOW": "REMOVE",
+        "UNAVAILABLE": "REMOVE",
+    }
+    key = _enum_key(value)
+    return aliases.get(key, key)

@@ -11,6 +11,7 @@ services:
       AUTH_PORT: ${AUTH_PORT:-8000}
       AUTH_DATABASE_URL: ${AUTH_DATABASE_URL:-postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-password}@auth-postgres:5432/${AUTH_POSTGRES_DB:-authdb}}
       USER_SERVICE_URL: ${USER_SERVICE_URL:-http://users-service:8000}
+      TEST_USE_MOCK_DATA: ${AUTH_TEST_USE_MOCK_DATA:-false}
       OPENFGA_ENABLED: ${OPENFGA_ENABLED:-true}
       OPENFGA_API_URL: ${OPENFGA_API_URL:-http://openfga:8080}
       OPENFGA_STORE_NAME: ${OPENFGA_STORE_NAME:-agendamento-medico}
@@ -20,20 +21,14 @@ services:
       - "traefik.http.routers.auth-service.rule=PathPrefix(`/auth`)"
       - "traefik.http.routers.auth-service.entrypoints=web"
       - "traefik.http.services.auth-service.loadbalancer.server.port=8000"
-      - "traefik.http.routers.auth-health.rule=Path(`/auth/health`)"
-      - "traefik.http.routers.auth-health.entrypoints=web"
-      - "traefik.http.routers.auth-health.middlewares=auth-health-strip"
-      - "traefik.http.routers.auth-health.priority=100"
-      - "traefik.http.routers.auth-health.service=auth-service"
-      - "traefik.http.middlewares.auth-health-strip.stripprefix.prefixes=/auth"
-      - "traefik.docker.network=web"
+      - "traefik.docker.network=internal"
     ports:
       - "${AUTH_PORT:-8000}:8000"
     depends_on:
       auth-postgres:
         condition: service_healthy
     networks:
-      - web
+      - internal
       - auth-net
 
   auth-postgres:
@@ -53,8 +48,7 @@ services:
       - auth-net
 
 networks:
-  web:
-    name: web
+ 
   auth-net:
 
 volumes:

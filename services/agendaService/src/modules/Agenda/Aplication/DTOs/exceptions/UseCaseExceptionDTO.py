@@ -29,7 +29,10 @@ class UseCaseException(Exception):
         super().__init__(self.error.message)
 
     def __str__(self) -> str:
-        return f"[{self.error.code}] {self.error.use_case}: {self.error.message}"
+        text = f"[{self.error.code}] {self.error.use_case}: {self.error.message}"
+        if self.original is not None:
+            text = f"{text} (caused by {self.original.__class__.__name__}: {self.original})"
+        return text
 
 
 class AgendaUseCaseException(UseCaseException):

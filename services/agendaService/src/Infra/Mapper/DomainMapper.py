@@ -216,11 +216,11 @@ class RuleMapper:
             return None
 
         rule_effect = _rule_effect(data.get("ruleEffect") or data.get("rule_effect"))
-        target_type = _target_type(data.get("targetType") or data.get("target_type"))
+        target_type = _target_type(data.get("type") or data.get("targetType") or data.get("target_type"))
         range_time = _optional_range_time(data.get("rangeTime") or data.get("range_time"))
         date = _optional_date(data.get("date"))
         weekday = data.get("weekday")
-        target = data.get("target")
+        target = data.get("targetId") or data.get("target_id") or data.get("target")
         description = data.get("description")
         nome = data.get("nome")
 
@@ -253,12 +253,21 @@ class RuleMapper:
                 targetType=target_type,
                 nome=nome,
             )
+        elif target is not None and target_type is not None:
+            rule = SpecificRule(
+                ruleEffect=rule_effect,
+                rangeTime=range_time,
+                description=str(description or ""),
+                id=str(target),
+                type=target_type,
+                nome=nome,
+            )
         elif target is not None and target_type is None:
             rule = SpecificRule(
                 ruleEffect=rule_effect,
-                target=str(target),
                 rangeTime=range_time,
                 description=str(description or ""),
+                id=str(target),
                 nome=nome,
             )
         elif target_type is not None:
@@ -294,7 +303,18 @@ def _rule_effect(value: Any) -> RuleEffect:
         return value
     if value is None:
         return RuleEffect.NULL
-    return RuleEffect[str(value).upper()]
+    text = str(value).strip()
+    if "." in text:
+        text = text.rsplit(".", 1)[-1]
+    aliases = {
+        "ALLOW": "ADD",
+        "AVAILABLE": "ADD",
+        "DENY": "REMOVE",
+        "DISALLOW": "REMOVE",
+        "UNAVAILABLE": "REMOVE",
+    }
+    key = aliases.get(text.upper(), text.upper())
+    return RuleEffect[key]
 
 
 def _target_type(value: Any) -> TargetType | None:

@@ -43,8 +43,11 @@ class UserServiceCreatedEventsConsumer:
         self._patient_created_handler = patient_created_handler
         self._doctor_deleted_handler = doctor_deleted_handler
         self._patient_deleted_handler = patient_deleted_handler
+        self._started = False
 
     async def start(self) -> None:
+        if self._started:
+            return
         await self._rabbitmq.consume(
             queue_name=settings.user_events_queue,
             routing_keys=[
@@ -55,6 +58,11 @@ class UserServiceCreatedEventsConsumer:
             ],
             handler=self.handle_message,
         )
+        self._started = True
+
+    async def stop(self) -> None:
+        self._started = False
+        await self._rabbitmq.close()
 
     async def handle_message(self, message) -> None:
         async with message.process():

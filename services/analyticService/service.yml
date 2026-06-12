@@ -23,7 +23,7 @@ services:
       - "traefik.http.routers.analytic-service.entrypoints=web"
       - "traefik.http.routers.analytic-service.middlewares=auth@file"
       - "traefik.http.services.analytic-service.loadbalancer.server.port=8000"
-      - "traefik.docker.network=web"
+      - "traefik.docker.network=internal"
     ports:
       - "${ANALYTIC_PORT:-8005}:8000"
     depends_on:
@@ -33,7 +33,7 @@ services:
         condition: service_healthy
         required: false
     networks:
-      - web
+      - internal
       - analytic-net
 
   analytic-postgres:
@@ -53,8 +53,7 @@ services:
       - analytic-net
 
 networks:
-  web:
-    name: web
+
   analytic-net:
 
 volumes:

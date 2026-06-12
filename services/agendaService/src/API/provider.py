@@ -12,12 +12,14 @@ from src.infra.adapter.repository import (
     RoomRepository,
     RuleRepository,
 )
+
 from src.infra.adapter.ExternServices import CalendarDataClient
 from src.infra.adapter.Messaging import InMemoryEventBus
 from src.infra.adapter.Messaging.websocket.container import connection_manager
 from src.infra.adapter.Messaging.rabbitMQ.userServiceConsumers import UserServiceCreatedEventsConsumer
 from src.infra.adapter.repository.querys import (
     AppointmentQueryRepository,
+    AppointmentTypeQueryRepository,
     CalendarQueryRepository,
     ClinicQueryRepository,
     DoctorQueryRepository,
@@ -48,6 +50,7 @@ from src.modules.agenda.aplication.ports.repository import (
 )
 from src.modules.agenda.aplication.ports.repository.querys import (
     AppointmentQueryRepositoryPort,
+    AppointmentTypeQueryRepositoryPort,
     CalendarQueryRepositoryPort,
     ClinicQueryRepositoryPort,
     DoctorQueryRepositoryPort,
@@ -126,17 +129,25 @@ from src.modules.agenda.aplication.useCases.commands.rules.DeleteRule import (
 )
 from src.modules.agenda.aplication.useCases.querys import (
     GetAppointmentByIdUseCase,
+    GetAppointmentTypeByIdUseCase,
     GetClinicByIdUseCase,
     GetDayByIdUseCase,
     GetDoctorByIdUseCase,
     GetPatientByIdUseCase,
+    GetRoomAdminDetailUseCase,
     GetRoomByIdUseCase,
     GetRuleByIdUseCase,
+    GetRulesAdminContextUseCase,
+    ListAppointmentTypesUseCase,
+    ListAppointmentsByDoctorUseCase,
+    ListAppointmentsByPatientUseCase,
     ListAppointmentsUseCase,
     ListClinicsUseCase,
     ListDaysUseCase,
     ListDoctorsUseCase,
+    ListMonthDaysForFrontUseCase,
     ListPatientsUseCase,
+    ListRoomsAdminDetailedUseCase,
     ListRoomsUseCase,
     ListRulesUseCase,
 )
@@ -233,6 +244,11 @@ def get_appointment_query_repository() -> AppointmentQueryRepository:
 
 
 @lru_cache
+def get_appointment_type_query_repository() -> AppointmentTypeQueryRepository:
+    return AppointmentTypeQueryRepository()
+
+
+@lru_cache
 def get_calendar_query_repository() -> CalendarQueryRepository:
     return CalendarQueryRepository()
 
@@ -266,6 +282,7 @@ def get_create_appointment_use_case() -> CreateAppointmentUseCase:
     return CreateAppointmentUseCase(
         cast(AppointmentRepositoryPort, get_appointment_repository()),
         cast(AppointmentSchedulingRepositoryPort, get_appointment_scheduling_repository()),
+        cast(CalendarRepositoryPort, get_calendar_repository()),
         cast(BusPort, get_event_bus()),
     )
 
@@ -435,12 +452,40 @@ def get_list_appointments_query_use_case() -> ListAppointmentsUseCase:
     )
 
 
+def get_list_appointments_by_patient_query_use_case() -> ListAppointmentsByPatientUseCase:
+    return ListAppointmentsByPatientUseCase(
+        cast(AppointmentQueryRepositoryPort, get_appointment_query_repository())
+    )
+
+
+def get_list_appointments_by_doctor_query_use_case() -> ListAppointmentsByDoctorUseCase:
+    return ListAppointmentsByDoctorUseCase(
+        cast(AppointmentQueryRepositoryPort, get_appointment_query_repository())
+    )
+
+
+def get_appointment_type_by_id_query_use_case() -> GetAppointmentTypeByIdUseCase:
+    return GetAppointmentTypeByIdUseCase(
+        cast(AppointmentTypeQueryRepositoryPort, get_appointment_type_query_repository())
+    )
+
+
+def get_list_appointment_types_query_use_case() -> ListAppointmentTypesUseCase:
+    return ListAppointmentTypesUseCase(
+        cast(AppointmentTypeQueryRepositoryPort, get_appointment_type_query_repository())
+    )
+
+
 def get_day_by_id_query_use_case() -> GetDayByIdUseCase:
     return GetDayByIdUseCase(cast(CalendarQueryRepositoryPort, get_calendar_query_repository()))
 
 
 def get_list_days_query_use_case() -> ListDaysUseCase:
     return ListDaysUseCase(cast(CalendarQueryRepositoryPort, get_calendar_query_repository()))
+
+
+def get_list_month_days_for_front_query_use_case() -> ListMonthDaysForFrontUseCase:
+    return ListMonthDaysForFrontUseCase(cast(CalendarQueryRepositoryPort, get_calendar_query_repository()))
 
 
 def get_clinic_by_id_query_use_case() -> GetClinicByIdUseCase:
@@ -475,12 +520,24 @@ def get_list_rooms_query_use_case() -> ListRoomsUseCase:
     return ListRoomsUseCase(cast(RoomQueryRepositoryPort, get_room_query_repository()))
 
 
+def get_room_admin_detail_query_use_case() -> GetRoomAdminDetailUseCase:
+    return GetRoomAdminDetailUseCase(cast(RoomQueryRepositoryPort, get_room_query_repository()))
+
+
+def get_list_rooms_admin_detailed_query_use_case() -> ListRoomsAdminDetailedUseCase:
+    return ListRoomsAdminDetailedUseCase(cast(RoomQueryRepositoryPort, get_room_query_repository()))
+
+
 def get_rule_by_id_query_use_case() -> GetRuleByIdUseCase:
     return GetRuleByIdUseCase(cast(RuleQueryRepositoryPort, get_rule_query_repository()))
 
 
 def get_list_rules_query_use_case() -> ListRulesUseCase:
     return ListRulesUseCase(cast(RuleQueryRepositoryPort, get_rule_query_repository()))
+
+
+def get_rules_admin_context_query_use_case() -> GetRulesAdminContextUseCase:
+    return GetRulesAdminContextUseCase(cast(RuleQueryRepositoryPort, get_rule_query_repository()))
 
 
 def get_connection_manager():

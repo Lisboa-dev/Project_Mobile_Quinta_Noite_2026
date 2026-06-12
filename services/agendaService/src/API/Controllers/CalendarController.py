@@ -6,6 +6,7 @@ from src.api.provider import (
     get_delete_calendar_use_case,
     get_day_by_id_query_use_case,
     get_list_days_query_use_case,
+    get_list_month_days_for_front_query_use_case,
     get_update_day_use_case,
 )
 from src.modules.agenda.aplication.dtos.useCase.query import GetByIdQuery, ListDaysQuery
@@ -20,6 +21,15 @@ async def create_calendar(
     use_case=Depends(get_create_calendar_use_case),
 ):
     return await use_case.execute(request.to_command())
+
+
+@routerCalendar.get("/months/{year}/{month}/days")
+async def list_month_days_for_front(
+    year: int,
+    month: int,
+    use_case=Depends(get_list_month_days_for_front_query_use_case),
+):
+    return await use_case.execute(year, month)
 
 
 @routerCalendar.get("/days/{day_id}")

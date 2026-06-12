@@ -15,7 +15,7 @@ async def list_admins(use_case=Depends(UserFactory.list_admin_use_case)):
 
 
 @routerAdmins.get("/{user_id}", response_model=UserResponse, responses={404: {"model": ErrorResponse}})
-async def detail_admin(user_id: int, use_case=Depends(UserFactory.detail_admin_use_case)):
+async def detail_admin(user_id: str, use_case=Depends(UserFactory.detail_admin_use_case)):
     try:
         return dto_to_response(await use_case.execute(user_id))
     except Exception as exc:
@@ -23,7 +23,7 @@ async def detail_admin(user_id: int, use_case=Depends(UserFactory.detail_admin_u
 
 
 @routerAdmins.post("/{user_id}/promote", response_model=UseCaseResponse, responses={404: {"model": ErrorResponse}})
-async def promote_user_to_admin(user_id: int, use_case=Depends(UserFactory.create_admin_use_case)):
+async def promote_user_to_admin(user_id: str, use_case=Depends(UserFactory.create_admin_use_case)):
     try:
         return dto_to_response(await use_case.execute(PromoteUserCommand(id=user_id)))
     except Exception as exc:
@@ -40,7 +40,7 @@ async def admin_create_doctor(data: MedicCreateRequest, use_case=Depends(UserFac
 
 
 @routerAdmins.post("/{user_id}/depreciate", response_model=UseCaseResponse, responses={404: {"model": ErrorResponse}})
-async def depreciate_admin(user_id: int, use_case=Depends(UserFactory.delete_admin_use_case)):
+async def depreciate_admin(user_id: str, use_case=Depends(UserFactory.delete_admin_use_case)):
     try:
         return dto_to_response(await use_case.execute(DepreciatUserCommand(id=user_id)))
     except Exception as exc:
@@ -48,7 +48,7 @@ async def depreciate_admin(user_id: int, use_case=Depends(UserFactory.delete_adm
 
 
 @routerAdmins.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT, responses={404: {"model": ErrorResponse}})
-async def delete_admin(user_id: int, use_case=Depends(UserFactory.delete_admin_use_case)):
+async def delete_admin(user_id: str, use_case=Depends(UserFactory.delete_admin_use_case)):
     try:
         await use_case.execute(DepreciatUserCommand(id=user_id))
         return Response(status_code=status.HTTP_204_NO_CONTENT)

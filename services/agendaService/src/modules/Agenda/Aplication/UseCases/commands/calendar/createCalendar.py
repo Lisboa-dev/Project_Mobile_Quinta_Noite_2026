@@ -6,12 +6,13 @@ from src.modules.agenda.aplication.events.CalendarEvent import CreateCalendarEve
 from src.modules.agenda.aplication.ports.externServices.CalendarDataPort import CalendarDataPort
 from src.modules.agenda.aplication.ports.repository import RuleRepositoryPoty
 from src.modules.agenda.aplication.ports.repository.CalendarRepositoryPort import CalendarRepositoryPort
-from src.modules.agenda.domain.entities import Day
+from src.modules.agenda.domain.entities.Day import Day
+from src.modules.agenda.domain.rules.BaseRule import BaseRule
 
 
 @dataclass(frozen=True)
 class CreateCalendarCommand:
-    day: int
+    mes: int
     ano: int
     triggered_by_id: str | None = None
 
@@ -34,27 +35,48 @@ class CreateCalendarUseCase:
 
     async def execute(self, command: CreateCalendarCommand) -> UseCaseOutputDTO:
         try:
-            data = await self._baseData.mont(command.day, command.ano)
+            data = await self._baseData.mont(command.mes, command.ano)
             rules = await self._repositoryRule.getDayRules()
             
             if data:
                 
-                days = []
-                for d in data:
+                print("\n\n\n antes",data, "\n\n\n\n")
+                moths = []
+                
+                for month_days in data:
+                    days = []
+                    for d in month_days:
+                        try:
+                            day = Day(**d)
+                            day.addRules(
+                                [
+                                    rule
+                                    for rule in rules
+                                    if isinstance(rule, BaseRule)
+                                    and (
+                                        (rule.date is not None and rule.date.compare(day.date))
+                                        or (
+                                            rule.weekday is not None
+                                            and int(day.weekday) == int(rule.weekday)
+                                        )
+                                    )
+                                ]
+                            )
+                            days.append(day)
+                        except Exception as exc:
+                            await self._repositoryCalendar.delete(command.ano)
+                            raise CreateUseCaseException(
+                                code="CREATE_CALENDAR_DAY_ERROR",
+                                message="Error creating calendar day",
+                                use_case=self.__class__.__name__,
+                                context={"day": str(d)},
+                                original=exc,
+                            ) from exc
+                   
+                    moths.append(days)
                     
-                    try:
-                        day = Day(**d)
-                        day.addRules(rules)
-                        await self._repositoryCalendar.save(day)
-                        days.append(day)
-                    except:
-                        await self._repositoryCalendar.delete(command.ano)
-                        raise CreateUseCaseException(
-                            code="CREATE_CALENDAR_DAY_ERROR",
-                            message="Error creating calendar day",
-                            use_case=self.__class__.__name__,
-                            context={"day": str(d)},
-                        )
+                await self._repositoryCalendar.saveMany(moths)
+
                 event = CreateCalendarEvent.from_days(
                     days=days,
                     year=str(command.ano),
@@ -68,8 +90,9 @@ class CreateCalendarUseCase:
                     resource_id=str(command.ano),
                     triggered_by_id=command.triggered_by_id,
                     event_name=event.EVENT_NAME,
-                    data={"days_count": len(days), "day_ids": [str(day.date) for day in days]},
+                    
                 )
+                
             return UseCaseOutputDTO.fail(
                 use_case=self.__class__.__name__,
                 action="create",

@@ -1,6 +1,7 @@
 import pytest
 
 from modules.users.domain.exceptions.DomainExceptions import UserAlreadyExistsException
+from tests import mock_data
 
 
 @pytest.mark.asyncio
@@ -13,7 +14,7 @@ async def test_create_medic_with_mock_data_persists_and_emits_event(users_provid
 
     assert result.success is True
     assert result.resource == "medic"
-    assert result.resource_id == "1"
+    assert result.resource_id == mock_data.MOCK_MEDIC_ID
     assert len(event_bus.events) == 1
 
 

@@ -24,7 +24,7 @@ async def list_pacients(use_case=Depends(UserFactory.list_pacient_use_case)):
 
 
 @routerPacients.get("/{user_id}", response_model=UserResponse, responses={404: {"model": ErrorResponse}})
-async def detail_pacient(user_id: int, use_case=Depends(UserFactory.detail_pacient_use_case)):
+async def detail_pacient(user_id: str, use_case=Depends(UserFactory.detail_pacient_use_case)):
     try:
         return dto_to_response(await use_case.execute(user_id))
     except Exception as exc:
@@ -32,12 +32,12 @@ async def detail_pacient(user_id: int, use_case=Depends(UserFactory.detail_pacie
 
 
 @routerPacients.put("/{user_id}", response_model=UserResponse, responses={501: {"model": ErrorResponse}})
-async def update_pacient(user_id: int, data: UserUpdateRequest):
+async def update_pacient(user_id: str, data: UserUpdateRequest):
     raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED, detail="update de paciente ainda nao implementado")
 
 
 @routerPacients.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT, responses={404: {"model": ErrorResponse}})
-async def delete_pacient(user_id: int, use_case=Depends(UserFactory.delete_pacient_use_case)):
+async def delete_pacient(user_id: str, use_case=Depends(UserFactory.delete_pacient_use_case)):
     try:
         await use_case.execute(DeletePacientCommand(id=user_id))
         return Response(status_code=status.HTTP_204_NO_CONTENT)

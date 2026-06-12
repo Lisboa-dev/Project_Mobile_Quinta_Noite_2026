@@ -51,4 +51,4 @@ class UpdateDayUseCase:
                 use_case=self.__class__.__name__,
                 context={"command": str(command)},
                 original=e,
-            ) from e
+            ) 

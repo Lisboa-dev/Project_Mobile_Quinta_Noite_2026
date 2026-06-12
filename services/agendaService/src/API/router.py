@@ -14,11 +14,11 @@ from src.api.controllers import (
 api_router = APIRouter(prefix="/agenda")
 
 api_router.include_router(routerAppointment)
-api_router.include_router(routerCalendar, include_in_schema=False)
-api_router.include_router(routerClinic, include_in_schema=False)
-api_router.include_router(routerInfra, include_in_schema=False)
+api_router.include_router(routerCalendar)
+api_router.include_router(routerClinic)
+api_router.include_router(routerInfra)
 api_router.include_router(routerRoom)
-api_router.include_router(routerRule, include_in_schema=False)
+api_router.include_router(routerRule)
 api_router.include_router(routerWebsocket)
 
 routerAgenda = api_router

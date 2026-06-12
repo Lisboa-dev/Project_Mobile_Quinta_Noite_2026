@@ -26,7 +26,7 @@ class CreateCalendarRequest(ApiInput):
         return value
 
     def to_command(self) -> CreateCalendarCommand:
-        return CreateCalendarCommand(day=self.mes, ano=self.ano, triggered_by_id=self.triggered_by_id)
+        return CreateCalendarCommand(mes=self.mes, ano=self.ano, triggered_by_id=self.triggered_by_id)
 
 
 class UpdateDayRequest(ApiInput):

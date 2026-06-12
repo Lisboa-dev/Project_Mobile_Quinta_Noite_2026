@@ -22,15 +22,22 @@ services:
       MINIO_BUCKET_NAME: ${MINIO_BUCKET_NAME:-user-profile-images}
       MINIO_SECURE: ${MINIO_SECURE:-false}
       PROFILE_IMAGE_MAX_BYTES: ${PROFILE_IMAGE_MAX_BYTES:-5242880}
-      PROFILE_IMAGE_ALLOWED_TYPES: ${PROFILE_IMAGE_ALLOWED_TYPES:-image/jpeg,image/png,image/webp}
+      PROFILE_IMAGE_ALLOWED_TYPES: ${PROFILE_IMAGE_ALLOWED_TYPES:-image/jpeg,image/png,image/p}
     labels:
       - "traefik.enable=true"
+      - "traefik.http.routers.users-public-register.rule=Path(`/users/pacients/`) && Method(`POST`)"
+      - "traefik.http.routers.users-public-register.entrypoints=web"
+      - "traefik.http.routers.users-public-register.middlewares=users-strip"
+      - "traefik.http.routers.users-public-register.priority=100"
+      - "traefik.http.routers.users-public-register.service=users-service"
+
       - "traefik.http.routers.users-service.rule=PathPrefix(`/users`)"
       - "traefik.http.routers.users-service.entrypoints=web"
       - "traefik.http.routers.users-service.middlewares=auth@file,users-strip"
+      - "traefik.http.routers.users-service.priority=1"
       - "traefik.http.middlewares.users-strip.stripprefix.prefixes=/users"
       - "traefik.http.services.users-service.loadbalancer.server.port=8000"
-      - "traefik.docker.network=web"
+      - "traefik.docker.network=internal"
     ports:
       - "${USERS_PORT:-8002}:8000"
     depends_on:
@@ -44,7 +51,7 @@ services:
       minio:
         condition: service_started
     networks:
-      - web
+      - internal
       - users-net
 
   users-redis:
@@ -90,8 +97,7 @@ services:
    
 
 networks:
-  web:
-    name: web
+
   users-net:
 
 volumes:

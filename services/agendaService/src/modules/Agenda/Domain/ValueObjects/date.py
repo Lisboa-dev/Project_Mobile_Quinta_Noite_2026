@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import datetime
 
 
 @dataclass
@@ -11,8 +12,15 @@ class Date:
         return f"{self.day}/{self.month}/{self.year}"
     
     @staticmethod
-    def stringToObject(self, date):
-        return Date(day=int(date[0:2]), month=int(date[3:5]), year=int(date[6:10]))
+    def stringToObject(date):
+        value = str(date).split("T", 1)[0].strip()
+        for date_format in ("%Y-%m-%d", "%d/%m/%Y"):
+            try:
+                parsed = datetime.strptime(value, date_format)
+                return Date(day=parsed.day, month=parsed.month, year=parsed.year)
+            except ValueError:
+                continue
+        raise ValueError(f"invalid date format: {date}")
     
     def compare(self, date):
         return self.day == date.day and self.month == date.month and self.year == date.year
@@ -34,3 +42,8 @@ class Date:
             month=current_date.month,
             year=current_date.year,
         )
+       
+    
+    @property
+    def getDay(self):
+        return self.day

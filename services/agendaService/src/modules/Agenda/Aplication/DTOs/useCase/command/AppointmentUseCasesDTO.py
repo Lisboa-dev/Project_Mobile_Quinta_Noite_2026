@@ -11,7 +11,7 @@ class CreateAppointmentCommand:
     time:str
     type:str
     triggered_by_id: str | None = None
-    room: str | None = None
+
     
     
 @dataclass(frozen=True)

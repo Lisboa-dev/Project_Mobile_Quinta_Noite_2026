@@ -25,11 +25,10 @@ services:
       - ./traefik/dynamic.yml:/etc/traefik/dynamic.yml:ro
     networks:
       - web
+      - internal
 
   rabbitmq:
     image: rabbitmq:3.13-management
-    profiles:
-      - local-rabbitmq
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-guest}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-guest}
@@ -37,7 +36,7 @@ services:
       - "${RABBITMQ_PORT:-5672}:5672"
       - "${RABBITMQ_MANAGEMENT_PORT:-15672}:15672"
     healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      test: ["CMD-SHELL", "rabbitmq-diagnostics -q check_running && rabbitmq-diagnostics -q listeners | grep -q 5672"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -45,8 +44,11 @@ services:
     volumes:
       - rabbitmq-data:/var/lib/rabbitmq
     networks:
-      - web
+      - internal
+    labels:
+     - "traefik.enable=false"
 
+     
   datadog:
     image: datadog/agent:latest
     profiles:
@@ -67,7 +69,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
-      - web
+      - internal
 
   openfga-postgres:
     image: postgres:17
@@ -96,6 +98,9 @@ services:
       OPENFGA_DATASTORE_URI: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-password}@openfga-postgres:5432/${OPENFGA_POSTGRES_DB:-openfga}?sslmode=disable
     networks:
       - openfga-net
+    
+    labels:
+     - "traefik.enable=false"
 
   openfga:
     image: openfga/openfga:v1.15.1
@@ -112,7 +117,7 @@ services:
       - "8081:8081"
       - "3000:3000"
     networks:
-      - web
+      - internal
       - openfga-net
 
   openfga-init:
@@ -129,8 +134,11 @@ services:
     volumes:
       - ./openfga:/openfga:ro
     networks:
-      - web
+      - internal
       - openfga-net
+
+    labels:
+     - "traefik.enable=false"
 
   prometheus:
     image: prom/prometheus:v2.55.1
@@ -146,6 +154,10 @@ services:
       - "${PROMETHEUS_PORT:-9090}:9090"
     networks:
       - web
+      - internal
+
+    labels:
+     - "traefik.enable=false"
 
   grafana:
     image: grafana/grafana-oss:11.3.1
@@ -161,7 +173,9 @@ services:
     ports:
       - "${GRAFANA_PORT:-3001}:3000"
     networks:
-      - web
+      - internal
+
+    
 
   otel-collector:
     image: otel/opentelemetry-collector-contrib:0.114.0
@@ -176,11 +190,20 @@ services:
       - "${OTEL_HTTP_PORT:-4318}:4318"
       - "${OTEL_PROM_EXPORTER_PORT:-9464}:9464"
     networks:
-      - web
+      - internal
+
+    labels:
+     - "traefik.enable=false"
 
 networks:
+  
   web:
-    name: web
+    name: medagenda-web
+  
+  internal:
+    name: internal
+    internal: true
+
   openfga-net:
 
 volumes:

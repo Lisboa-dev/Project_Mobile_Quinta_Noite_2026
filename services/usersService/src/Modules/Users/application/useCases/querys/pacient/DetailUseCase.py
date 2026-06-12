@@ -9,8 +9,8 @@ class DetailPacientUseCase:
     def __init__(self, repository: UserRepositoryPort):
         self._repository = repository
 
-    async def execute(self, query: GetUserByIdQuery | int) -> UserOutputDTO:
-        pacient_id = query.id if isinstance(query, GetUserByIdQuery) else query
+    async def execute(self, query: GetUserByIdQuery | str) -> UserOutputDTO:
+        pacient_id = query.id if isinstance(query, GetUserByIdQuery) else str(query)
         pacient = await maybe_await(self._repository.find_by_id(pacient_id))
         if pacient is None:
             raise UserNotFoundException(pacient_id)
